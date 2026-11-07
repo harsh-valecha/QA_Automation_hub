@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      browser:
+        description: "Browser for the UI job"
+        type: choice
+        options: [all, chromium, firefox, webkit]
+        default: all
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - run: pip install ruff
+      - run: ruff check .
+      - run: ruff format --check .
+
+  # Everything that does not need a browser. Exit code 5 = "no tests collected yet", allowed.
+  api:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - run: pip install -r requirements-dev.txt
+      - run: pytest -m "not ui" -n auto || [ $? -eq 5 ]
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: api-reports
+          path: reports/
+
+  ui:
+    needs: lint
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: ${{ fromJSON(github.event.inputs.browser && github.event.inputs.browser != 'all' && format('["{0}"]', github.event.inputs.browser) || '["chromium","firefox","webkit"]') }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - run: pip install -r requirements-dev.txt
+      - run: playwright install --with-deps ${{ matrix.browser }}
+      - name: Run browser tests (mark them with @pytest.mark.ui)
+        run: >
+          pytest -m ui --browser ${{ matrix.browser }} --video retain-on-failure -n 2
+          --html=reports/ui-${{ matrix.browser }}.html || [ $? -eq 5 ]
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ui-reports-${{ matrix.browser }}
+          path: |
+            reports/
+            test-results/

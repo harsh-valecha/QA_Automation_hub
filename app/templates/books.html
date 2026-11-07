@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Books{% endblock %}
+{% block content %}
+<h1 data-testid="page-title">Books</h1>
+
+<div class="stats" data-testid="stats">
+  Total books: <strong data-testid="stats-total">…</strong> ·
+  Total stock: <strong data-testid="stats-stock">…</strong>
+</div>
+
+<form method="get" action="{{ url_for('ui.books') }}" class="filters" data-testid="filter-form">
+  <input name="q" placeholder="Search title or author" value="{{ params.q or '' }}" data-testid="search-input">
+  <select name="category" data-testid="category-filter">
+    <option value="">All categories</option>
+    {% for c in categories %}
+      <option value="{{ c }}" {{ 'selected' if params.category == c }}>{{ c }}</option>
+    {% endfor %}
+  </select>
+  <select name="sort" data-testid="sort-select">
+    {% for s in ['id', 'title', 'price'] %}
+      <option value="{{ s }}" {{ 'selected' if params.sort == s }}>sort: {{ s }}</option>
+    {% endfor %}
+  </select>
+  <select name="order" data-testid="order-select">
+    {% for o in ['asc', 'desc'] %}
+      <option value="{{ o }}" {{ 'selected' if params.order == o }}>{{ o }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" data-testid="apply-filters">Apply</button>
+  <a href="{{ url_for('ui.books') }}" data-testid="reset-filters">Reset</a>
+</form>
+
+<p data-testid="result-count">{{ result.total }} book{{ '' if result.total == 1 else 's' }}</p>
+
+{% if result["items"] %}
+<table data-testid="books-table">
+  <thead><tr><th>Title</th><th>Author</th><th>ISBN</th><th>Price</th><th>Stock</th><th>Category</th><th>Actions</th></tr></thead>
+  <tbody>
+  {% for b in result["items"] %}
+    <tr data-testid="book-row" data-book-id="{{ b.id }}">
+      <td data-testid="book-title"><a href="{{ url_for('ui.book_detail', book_id=b.id) }}">{{ b.title }}</a></td>
+      <td data-testid="book-author">{{ b.author }}</td>
+      <td data-testid="book-isbn">{{ b.isbn }}</td>
+      <td data-testid="book-price">${{ '%.2f'|format(b.price) }}</td>
+      <td data-testid="book-stock">{{ b.stock }}</td>
+      <td data-testid="book-category">{{ b.category }}</td>
+      <td class="actions">
+        {% if current_user %}
+          <a href="{{ url_for('ui.book_edit', book_id=b.id) }}" data-testid="edit-book">Edit</a>
+        {% endif %}
+        {% if current_user and current_user.role == 'admin' %}
+          <form method="post" action="{{ url_for('ui.book_delete', book_id=b.id) }}" class="inline"
+                onsubmit="return confirm('Delete {{ b.title|e }}?');">
+            <button type="submit" data-testid="delete-book">Delete</button>
+          </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p data-testid="empty-state">No books found.</p>
+{% endif %}
+
+<nav class="pagination" data-testid="pagination">
+  {% if result.page > 1 %}
+    <a href="{{ url_for('ui.books', page=result.page - 1, **query) }}" data-testid="page-prev">« Prev</a>
+  {% else %}<span class="disabled" data-testid="page-prev-disabled">« Prev</span>{% endif %}
+  <span data-testid="page-info">Page {{ result.page }} of {{ result.pages }}</span>
+  {% if result.page < result.pages %}
+    <a href="{{ url_for('ui.books', page=result.page + 1, **query) }}" data-testid="page-next">Next »</a>
+  {% else %}<span class="disabled" data-testid="page-next-disabled">Next »</span>{% endif %}
+</nav>
+{% endblock %}

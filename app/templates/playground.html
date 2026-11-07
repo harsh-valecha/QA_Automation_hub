@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Playground{% endblock %}
+{% block content %}
+<h1 data-testid="page-title">Playground</h1>
+<p class="hint">Small widgets for practising Playwright features. Each section names the concept.</p>
+
+<section data-testid="sec-wait"><h2>Auto-wait / loading state</h2>
+  <button data-testid="load-slow" onclick="loadSlow()">Load slow data (2s)</button>
+  <span data-testid="slow-result" hidden></span>
+  <span data-testid="slow-spinner" hidden>Loading…</span>
+</section>
+
+<section data-testid="sec-dialogs"><h2>Dialogs (alert / confirm / prompt)</h2>
+  <button data-testid="btn-alert" onclick="alert('Hello from alert'); setResult('alert shown')">Alert</button>
+  <button data-testid="btn-confirm" onclick="setResult('confirm: ' + confirm('Are you sure?'))">Confirm</button>
+  <button data-testid="btn-prompt" onclick="setResult('prompt: ' + prompt('Your name?', 'anon'))">Prompt</button>
+  <p data-testid="dialog-result"></p>
+</section>
+
+<section data-testid="sec-inputs"><h2>Inputs, checkbox, radio, select</h2>
+  <label>Name <input data-testid="pg-name"></label>
+  <label><input type="checkbox" data-testid="pg-terms"> Accept terms</label>
+  <fieldset><legend>Plan</legend>
+    <label><input type="radio" name="plan" value="free" data-testid="plan-free" checked> Free</label>
+    <label><input type="radio" name="plan" value="pro" data-testid="plan-pro"> Pro</label>
+  </fieldset>
+  <label>Country <select data-testid="pg-country"><option>India</option><option>Germany</option><option>Brazil</option></select></label>
+  <button data-testid="pg-submit" onclick="submitInputs()" disabled>Submit</button>
+  <p data-testid="inputs-result"></p>
+</section>
+
+<section data-testid="sec-hover"><h2>Hover and keyboard</h2>
+  <span class="hover-target" data-testid="hover-target">Hover me
+    <span class="tooltip" data-testid="tooltip">I am a tooltip</span></span>
+  <input data-testid="key-input" placeholder="Press Enter or Escape">
+  <p data-testid="key-result"></p>
+</section>
+
+<section data-testid="sec-drag"><h2>Drag and drop</h2>
+  <div class="dnd">
+    <div draggable="true" id="card" data-testid="drag-card">Drag me</div>
+    <div id="zone-a" class="zone" data-testid="zone-a"></div>
+    <div id="zone-b" class="zone" data-testid="zone-b"></div>
+  </div>
+</section>
+
+<section data-testid="sec-files"><h2>Upload / download</h2>
+  <form method="post" action="{{ url_for('ui.playground_upload') }}" enctype="multipart/form-data">
+    <input type="file" name="file" data-testid="file-input">
+    <button type="submit" data-testid="upload-submit">Upload</button>
+  </form>
+  {% if upload_result %}
+    <p data-testid="upload-result">Uploaded {{ upload_result.name }} ({{ upload_result.size }} bytes)</p>
+  {% endif %}
+  <a href="{{ url_for('ui.books_export') }}" data-testid="download-csv">Download books CSV</a>
+</section>
+
+<section data-testid="sec-frames"><h2>iframe and new tab</h2>
+  <iframe src="{{ url_for('ui.playground_frame') }}" title="demo-frame" data-testid="demo-frame" width="320" height="130"></iframe>
+  <p><a href="{{ url_for('ui.playground_frame') }}" target="_blank" data-testid="open-new-tab">Open in new tab</a></p>
+</section>
+
+<section data-testid="sec-dynamic"><h2>Dynamic list (appear / disappear)</h2>
+  <button data-testid="add-item" onclick="addItem()">Add item</button>
+  <ul data-testid="item-list"></ul>
+</section>
+
+<script>
+function setResult(t){ document.querySelector('[data-testid="dialog-result"]').textContent = t; }
+
+async function loadSlow(){
+  const out = document.querySelector('[data-testid="slow-result"]');
+  const spin = document.querySelector('[data-testid="slow-spinner"]');
+  out.hidden = true; spin.hidden = false;
+  const r = await fetch('/api/slow?ms=2000'); const d = await r.json();
+  spin.hidden = true; out.hidden = false; out.textContent = 'Loaded after ' + d.waited_ms + 'ms';
+}
+
+const nameEl = document.querySelector('[data-testid="pg-name"]');
+const termsEl = document.querySelector('[data-testid="pg-terms"]');
+const submitEl = document.querySelector('[data-testid="pg-submit"]');
+function refresh(){ submitEl.disabled = !(nameEl.value.trim() && termsEl.checked); }
+nameEl.addEventListener('input', refresh); termsEl.addEventListener('change', refresh);
+function submitInputs(){
+  const plan = document.querySelector('input[name=plan]:checked').value;
+  const country = document.querySelector('[data-testid="pg-country"]').value;
+  document.querySelector('[data-testid="inputs-result"]').textContent =
+    'Hi ' + nameEl.value.trim() + ' | plan=' + plan + ' | country=' + country;
+}
+
+document.querySelector('[data-testid="key-input"]').addEventListener('keydown', e => {
+  const out = document.querySelector('[data-testid="key-result"]');
+  if (e.key === 'Enter') out.textContent = 'Enter pressed with "' + e.target.value + '"';
+  if (e.key === 'Escape') { e.target.value = ''; out.textContent = 'Cleared'; }
+});
+
+document.querySelectorAll('.zone').forEach(z => {
+  z.addEventListener('dragover', e => e.preventDefault());
+  z.addEventListener('drop', e => { e.preventDefault(); z.appendChild(document.getElementById('card')); });
+});
+document.getElementById('zone-a').appendChild(document.getElementById('card'));
+
+let n = 0;
+function addItem(){
+  const li = document.createElement('li'); n += 1;
+  li.dataset.testid = 'item'; li.textContent = 'Item ' + n + ' ';
+  const b = document.createElement('button'); b.textContent = 'remove'; b.dataset.testid = 'remove-item';
+  b.onclick = () => li.remove(); li.appendChild(b);
+  document.querySelector('[data-testid="item-list"]').appendChild(li);
+}
+</script>
+{% endblock %}

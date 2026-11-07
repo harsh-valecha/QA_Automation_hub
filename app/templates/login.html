@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Log in{% endblock %}
+{% block content %}
+<h1 data-testid="page-title">Log in</h1>
+<p class="hint">Demo accounts: <code>admin / admin123</code> (can delete) and <code>user / user123</code> (cannot delete).</p>
+<form method="post" action="" data-testid="login-form">
+  <label>Username <input name="username" data-testid="username-input" value="{{ username }}" autocomplete="username"></label>
+  <label>Password <input name="password" type="password" data-testid="password-input" autocomplete="current-password"></label>
+  <button type="submit" data-testid="login-submit">Log in</button>
+</form>
+{% endblock %}

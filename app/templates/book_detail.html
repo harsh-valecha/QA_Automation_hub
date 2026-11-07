@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ book.title }}{% endblock %}
+{% block content %}
+<h1 data-testid="detail-title">{{ book.title }}</h1>
+<dl data-testid="book-detail" data-book-id="{{ book.id }}">
+  <dt>Author</dt><dd data-testid="detail-author">{{ book.author }}</dd>
+  <dt>ISBN</dt><dd data-testid="detail-isbn">{{ book.isbn }}</dd>
+  <dt>Price</dt><dd data-testid="detail-price">${{ '%.2f'|format(book.price) }}</dd>
+  <dt>Stock</dt><dd data-testid="detail-stock">{{ book.stock }}</dd>
+  <dt>Category</dt><dd data-testid="detail-category">{{ book.category }}</dd>
+</dl>
+<p><a href="{{ url_for('ui.books') }}" data-testid="back-link">← Back to books</a></p>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Add book' if mode == 'create' else 'Edit book' }}{% endblock %}
+{% block content %}
+<h1 data-testid="page-title">{{ 'Add book' if mode == 'create' else 'Edit book' }}</h1>
+<form method="post" action="" data-testid="book-form" novalidate>
+  {% macro field(name, label, type='text') %}
+    <label>{{ label }}
+      <input name="{{ name }}" type="{{ type }}" value="{{ values.get(name, '') }}" data-testid="input-{{ name }}">
+    </label>
+    {% if errors.get(name) %}<span class="field-error" data-testid="error-{{ name }}">{{ errors[name] }}</span>{% endif %}
+  {% endmacro %}
+  {{ field('title', 'Title') }}
+  {{ field('author', 'Author') }}
+  {{ field('isbn', 'ISBN (13 digits)') }}
+  {{ field('price', 'Price', 'text') }}
+  {{ field('stock', 'Stock', 'text') }}
+  <label>Category
+    <select name="category" data-testid="input-category">
+      <option value="">-- choose --</option>
+      {% for c in categories %}
+        <option value="{{ c }}" {{ 'selected' if values.get('category') == c }}>{{ c }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  {% if errors.get('category') %}<span class="field-error" data-testid="error-category">{{ errors['category'] }}</span>{% endif %}
+  <div>
+    <button type="submit" data-testid="submit-book">{{ 'Create' if mode == 'create' else 'Save' }}</button>
+    <a href="{{ url_for('ui.books') }}" data-testid="cancel-link">Cancel</a>
+  </div>
+</form>
+{% endblock %}
