@@ -69,3 +69,25 @@ def base_url(live_server):
 @pytest.fixture(autouse=True)
 def _reset_state(live_server):
     requests.post(f"{live_server}/api/test/reset", timeout=5).raise_for_status()
+
+
+@pytest.fixture(scope="session")
+def api_client(base_url):
+    """Provide a requests-based client to tests using relative API paths.
+
+    Example::
+
+        def test_health(api_client):
+            response = api_client.get("/api/health")
+            assert response.ok
+    """
+    class APIClient(requests.Session):
+        def __init__(self, base_url):
+            super().__init__()
+            self.base_url = base_url.rstrip("/")
+
+        def request(self, method, url, *args, **kwargs):
+            url = url if url.startswith(("http://", "https://")) else f"{self.base_url}/{url.lstrip('/')}"
+            return super().request(method, url, *args, **kwargs)
+
+    return APIClient(base_url)
