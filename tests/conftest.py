@@ -13,6 +13,7 @@ import socket
 import subprocess
 import sys
 import time
+from itertools import count
 from pathlib import Path
 
 import pytest
@@ -113,5 +114,62 @@ def auth_token(request, api_client):
     )
     response.raise_for_status()
     return response.json()["token"]
+
+
+@pytest.fixture
+def username():
+    return "user"
+
+
+@pytest.fixture
+def password():
+    return "user123"
+
+
+@pytest.fixture
+def logged_in_page(page, username, password, base_url):
+    """Return a browser page signed in with the supplied credentials."""
+    page.goto(f"{base_url}/login")
+    page.locator('input[name="username"]').fill(username)
+    page.locator('input[name="password"]').fill(password)
+    page.get_by_role("button", name="Login").click()
+    return page
+
+
+@pytest.fixture
+def book_factory():
+    """Return valid book payloads with unique ISBN-13 values by default.
+
+    Example test usage::
+
+        def test_book_payload(book_factory):
+            book = book_factory()
+            assert book["title"].startswith("Test Book ")
+            assert len(book["isbn"]) == 13
+
+        def test_book_with_known_isbn(book_factory):
+            book = book_factory(isbn="9780306406157")
+            assert book["isbn"] == "9780306406157"
+    """
+    isbn_bodies = count(978000000000)
+
+    def make_book(isbn=None):
+        if isbn is None:
+            body = str(next(isbn_bodies))
+            checksum = sum(
+                int(digit) * (1 if index % 2 == 0 else 3)
+                for index, digit in enumerate(body)
+            )
+            isbn = f"{body}{(10 - checksum % 10) % 10}"
+
+        return {
+            "title": f"Test Book {isbn}",
+            "author": "Test Author",
+            "isbn": isbn,
+            "genre": "Fiction",
+        }
+
+    return make_book
+
 
 
