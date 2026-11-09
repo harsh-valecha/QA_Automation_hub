@@ -91,3 +91,27 @@ def api_client(base_url):
             return super().request(method, url, *args, **kwargs)
 
     return APIClient(base_url)
+
+
+@pytest.fixture
+def auth_token(request, api_client):
+    """Return an admin or user token.
+
+    Choose a role with indirect parametrization, e.g.:
+        @pytest.mark.parametrize("auth_token", ["admin"], indirect=True)
+        def test_admin(api_client, auth_token):
+            api_client.get("/api/admin", headers={"Authorization": f"Bearer {auth_token}"})
+    Omitting the parameter returns a user token.
+    """
+    role = getattr(request, "param", "user")
+    if role not in ("admin", "user"):
+        raise ValueError("auth_token must be 'admin' or 'user'")
+
+    response = api_client.post(
+        "/api/auth/login",
+        json={"username": f"{role}", "password": f"{role}123"},
+    )
+    response.raise_for_status()
+    return response.json()["token"]
+
+

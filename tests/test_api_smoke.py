@@ -1,3 +1,4 @@
+import pytest
 import json
 from pytest_check import check
 
@@ -64,6 +65,18 @@ def test_auth_login(api_client):
 
 
 # validate api/auth/me
-def test_auth_me(api_client):
-    response = api_client.get('api/auth/me')
-    print(response.text)
+@pytest.mark.parametrize("auth_token",["admin"],indirect=True)
+def test_auth_me(api_client, auth_token):
+    response = api_client.get(
+        "/api/auth/me",
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    # validate the response status code
+    check.equal(response.status_code,200,msg='no valid bearer token present ')
+
+    # validate the username 
+    check.equal(response.json()['username'],'admin',msg='username mismatch')
+
+    # validate the role
+    check.equal(response.json()['role'],'admin',msg='role mismatch')
