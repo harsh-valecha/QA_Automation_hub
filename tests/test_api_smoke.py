@@ -17,3 +17,53 @@ def test_api_health(api_client):
 
     # check for status in response text
     check.equal(response_text['status'],'ok',msg='Status not ok')
+
+# validating api stats
+def test_api_stats(api_client):
+    '''
+    b'{"by_category":{"fiction":2,"history":1,"science":1,"tech":3},"total_books":7,"total_stock":89}'
+    '''
+    response = api_client.get('/api/stats')
+    response_text = json.loads(response.content)
+
+    # validate the status code
+    check.equal(response.status_code,200,msg="status code not 200")
+
+    # validate the number of books 
+    check.equal(response_text['total_books'],7,msg = "books count mismatch")
+
+    # validate the total stock 
+    check.equal(response_text['total_stock'],89,msg="total stock mismatch")
+
+    # validate books present by categories
+    check.is_true("by_category" in response_text,msg="by_category not present")
+
+
+# auth login admin 
+def test_auth_login(api_client):
+    '''
+    Dummy api response text - 
+    '{"role":"admin","token":"token_number","token_type":"Bearer"}\n'
+    '''
+    response = api_client.post('api/auth/login',
+                               json={'username':'admin','password':'admin123'}
+                               )
+    response_text = json.loads(response.text)
+
+    # validate successful login
+    check.equal(response.status_code,200,msg='Admin login unsuccessful')
+
+    # validate non empty token recieved
+    check.is_not_none(response_text['token'],msg='Empty token received')
+
+    # validate token type is bearer
+    check.equal(response_text['token_type'],"Bearer",msg="Token type is not bearer")
+
+    # validate role is admin
+    check.equal(response_text['role'],'admin',msg='Role is not admin')
+
+
+# validate api/auth/me
+def test_auth_me(api_client):
+    response = api_client.get('api/auth/me')
+    print(response.text)
