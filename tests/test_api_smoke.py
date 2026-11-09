@@ -168,9 +168,9 @@ def test_api_books_valid_token(api_client,auth_token):
 # validate patch request on api/books/1
 @pytest.mark.parametrize("auth_token",['admin'],indirect=True)
 def test_api_books_patch(api_client,auth_token):
-    response = api_client('api/books/1',
-                          headers={"Authorization":f'Bearer {auth_token}'},
-                          json={'title':'Totally true'})
+    response = api_client.patch('/api/books/1',
+                                headers={"Authorization":f'Bearer {auth_token}'},
+                                json={'title':'Totally true'})
 
     response_json = response.json()
 
@@ -178,5 +178,40 @@ def test_api_books_patch(api_client,auth_token):
     # validate the status code
     check.equal(response.status_code,200,msg='Status code mismatch')    
 
-    # validate the 
+    # validate the title updated correctly
+    check.equal(response_json['title'],'Totally true',msg='patch not updated correctly')
 
+
+# validate delete multiple times same id
+@pytest.mark.parametrize("auth_token",["admin"],indirect=True)
+def test_api_books_delete_multiple(api_client,auth_token):
+    response_first = api_client.delete('/api/books/1',
+                                    headers={"Authorization":f'Bearer {auth_token}'})
+    
+    response_second = api_client.delete('/api/books/1',
+                                        headers={"Authorization":f'Bearer {auth_token}'})
+
+    # validate first response status code
+    check.equal(response_first.status_code,204,msg="Error in deletion")
+
+    # validate second response status code 
+    check.equal(response_second.status_code,404,msg="Mistamtch in second response deletion")
+        
+
+# slow api 
+def test_api_slow_wait(api_client):
+    response = api_client.get('api/slow?ms=0')
+
+    response_json = response.json()
+    # validate status code
+    check.equal(response.status_code,200,msg='status code mismatch')
+
+    # validate waited_ms = 0
+    check.equal(response_json['waited_ms'],0,msg='wait time mismatch')
+
+
+def test_api_reset(api_client):
+    response = api_client.post('api/test/reset')
+    
+    # status code validation
+    check.equal(response.status_code,204,msg='status code mismatch')
