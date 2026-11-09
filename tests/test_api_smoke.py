@@ -80,3 +80,103 @@ def test_auth_me(api_client, auth_token):
 
     # validate the role
     check.equal(response.json()['role'],'admin',msg='role mismatch')
+
+
+# validate api/auth/me without token
+def test_auth_me_no_token(api_client):
+    response = api_client.get('api/auth/me')
+
+    # validate the response status code
+    check.equal(response.status_code,401,msg='status code mismatch')
+
+
+# validate api/books endpoint
+def test_api_books(api_client):
+    response = api_client.get('api/books')
+    response_json = response.json()
+    # print(response_json)
+
+    # validate the status code
+    check.equal(response.status_code,200,msg='status code mismatch')
+
+    # validate the total count
+    check.equal(response_json['total'],7,msg='total books count mismatch')
+
+    # validate the items count 
+    check.equal(len(response_json['items']),5,msg = 'items count mismatch')
+
+    # validate current page 
+    check.equal(response_json['page'],1,msg='page number mismatch')
+
+    # validate total pages
+    check.equal(response_json['pages'],2,msg='total pages count mismatch')
+
+
+# validations for api/books/id endpoint
+def test_api_first_book(api_client):
+    response = api_client.get('api/books/1')
+    response_json = response.json()
+    
+    
+    # verify status code
+    check.equal(response.status_code,200,msg='status code mismatch')
+
+    # verify book title present in response
+    check.is_true('title' in response_json,msg='title not present in response')
+
+
+def test_api_books_out_of_bound(api_client):
+    response = api_client.get('api/books/9999')
+    response_json = response.json()
+    
+    # verify status code
+    check.equal(response.status_code , 404,msg='status code mismatch')
+
+    # verify error not found
+    check.equal(response_json['error'],'not_found',msg='Book with mentioned index not found')
+
+
+# verify post request on api/books with valid user token
+@pytest.mark.parametrize('auth_token',['admin'],indirect=True)
+def test_api_books_valid_token(api_client,auth_token):
+    response = api_client.post('api/books',
+                               headers={"Authorization":f"Bearer {auth_token}"},
+                               json= {'title':'The ghost town',
+                                     'author':'kamlesh jagpat',
+                                     'isbn':'1111111111111',
+                                     'price':200,
+                                     'stock':10,
+                                     'category':'history'
+                                     })
+
+    
+    response_headers = response.headers
+    response_json = response.json()
+
+    # print(response.headers,response.json())
+    # validate the status code 
+    check.equal(response.status_code,201,msg="status code mismatch")
+
+    # validate location in header
+    check.is_true('Location' in response_headers, msg='location not found in response headers')
+
+    # validate created_at in response
+    check.is_true('created_at' in response_json, msg='created_at not present in response json')
+
+    
+
+# validate patch request on api/books/1
+@pytest.mark.parametrize("auth_token",['admin'],indirect=True)
+def test_api_books_patch(api_client,auth_token):
+    response = api_client('api/books/1',
+                          headers={"Authorization":f'Bearer {auth_token}'},
+                          json={'title':'Totally true'})
+
+    response_json = response.json()
+
+    print(response_json)
+    # validate the status code
+    check.equal(response.status_code,200,msg='Status code mismatch')    
+
+    # validate the 
+
