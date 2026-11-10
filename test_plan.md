@@ -44,27 +44,27 @@ Do not duplicate API-only or UI-only checks in the E2E suite.
 
 ### [`tests/api/test_api_books.py`](./tests/api/test_api_books.py)
 
-| Test                                                    | Description                                                                                              | Status         |
-| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------- |
-| `test_api_books`                                        | Check the default book-list total, first-page size, current page, and page count.                        | ✅ Complete    |
-| `test_api_first_book`                                   | Check seeded book ID 1 can be retrieved and includes a title.                                            | ✅ Complete    |
-| `test_api_books_out_of_bound`                           | Check an unknown book ID returns 404 / `not_found`, and unsupported methods return JSON 405.             | ✅ Complete    |
-| `test_api_books_valid_token`                            | Check an admin can create a book, verify its submitted fields, and retrieve it using `Location`.         | ✅ Complete    |
-| `test_api_books_patch`                                  | Check an admin can PATCH a book, unsupplied values are preserved, and PUT replaces the full book.        | ✅ Complete    |
-| `test_api_books_delete_multiple`                        | Check deleting a book succeeds once and returns 404 on a repeated delete.                                | ✅ Complete    |
-| `test_api_books_pagination`                             | Check pagination returns all books without missing or duplicate IDs, using `per_page`.                   | ✅ Complete    |
-| `test_api_category_counts`                              | Check category counts across all pages of the books list.                                                | ✅ Complete    |
-| `test_api_books_total_and_stock`                        | Check the paginated books list contains all 7 seeded books and their total stock is 89.                  | ✅ Complete    |
-| `test_list_books_defaults_and_schema_smoke`             | Check default list metadata and required fields on every returned book.                                  | ✅ Complete    |
-| `test_get_seeded_book_smoke`                            | Check ID 1 matches the known seed: Clean Code, ISBN `9780132350884`, category `tech`.                    | ✅ Complete    |
-| `test_list_books_search_filter_and_sort`                | Check search, category, price bounds, sorting, and no-match results.                                     | ✅ Complete    |
-| `test_list_books_invalid_query`                         | Check invalid pagination, filters, sorting, ordering, and price bounds return 400 / `bad_request`.       | ✅ Complete    |
-| `test_create_book_rejects_invalid_payloads`             | Check required fields, field limits, ISBN, price, stock, category, unknown fields, and malformed bodies. | ✅ Complete    |
-| `test_create_book_rejects_duplicate_isbn`               | Check duplicate ISBN returns 409 and does not change the book count.                                     | ✅ Complete    |
-| `test_update_book_validates_payload_and_duplicate_isbn` | Check incomplete/invalid updates and duplicate ISBN errors.                                              | ✅ Complete    |
-| `test_book_mutations_require_authentication`            | Check POST, PUT, and PATCH reject missing or invalid tokens without changing data.                       | ⬜ Not started |
-| `test_delete_book_requires_admin`                       | Check admin delete succeeds, user delete is forbidden, and anonymous delete is unauthorized.             | ⬜ Not started |
-| `test_parallel_book_reads_succeed`                      | Check concurrent health, stats, list, and book-detail reads return valid responses.                      | ⬜ Not started |
+| Test                                                    | Description                                                                                              | Status      |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ----------- |
+| `test_api_books`                                        | Check the default book-list total, first-page size, current page, and page count.                        | ✅ Complete |
+| `test_api_first_book`                                   | Check seeded book ID 1 can be retrieved and includes a title.                                            | ✅ Complete |
+| `test_api_books_out_of_bound`                           | Check an unknown book ID returns 404 / `not_found`, and unsupported methods return JSON 405.             | ✅ Complete |
+| `test_api_books_valid_token`                            | Check an admin can create a book, verify its submitted fields, and retrieve it using `Location`.         | ✅ Complete |
+| `test_api_books_patch`                                  | Check an admin can PATCH a book, unsupplied values are preserved, and PUT replaces the full book.        | ✅ Complete |
+| `test_api_books_delete_multiple`                        | Check deleting a book succeeds once and returns 404 on a repeated delete.                                | ✅ Complete |
+| `test_api_books_pagination`                             | Check pagination returns all books without missing or duplicate IDs, using `per_page`.                   | ✅ Complete |
+| `test_api_category_counts`                              | Check category counts across all pages of the books list.                                                | ✅ Complete |
+| `test_api_books_total_and_stock`                        | Check the paginated books list contains all 7 seeded books and their total stock is 89.                  | ✅ Complete |
+| `test_list_books_defaults_and_schema_smoke`             | Check default list metadata and required fields on every returned book.                                  | ✅ Complete |
+| `test_get_seeded_book_smoke`                            | Check ID 1 matches the known seed: Clean Code, ISBN `9780132350884`, category `tech`.                    | ✅ Complete |
+| `test_list_books_search_filter_and_sort`                | Check search, category, price bounds, sorting, and no-match results.                                     | ✅ Complete |
+| `test_list_books_invalid_query`                         | Check invalid pagination, filters, sorting, ordering, and price bounds return 400 / `bad_request`.       | ✅ Complete |
+| `test_create_book_rejects_invalid_payloads`             | Check required fields, field limits, ISBN, price, stock, category, unknown fields, and malformed bodies. | ✅ Complete |
+| `test_create_book_rejects_duplicate_isbn`               | Check duplicate ISBN returns 409 and does not change the book count.                                     | ✅ Complete |
+| `test_update_book_validates_payload_and_duplicate_isbn` | Check incomplete/invalid updates and duplicate ISBN errors.                                              | ✅ Complete |
+| `test_book_mutations_require_authentication`            | Check POST, PUT, and PATCH reject missing or invalid tokens without changing data.                       | ✅ Complete |
+| `test_delete_book_requires_admin`                       | Check admin delete succeeds, user delete is forbidden, and anonymous delete is unauthorized.             | ✅ Complete |
+| `test_parallel_book_reads_succeed`                      | Check concurrent health, stats, list, and book-detail reads return valid responses.                      | ✅ Complete |
 
 ### [`tests/api/test_reset.py`](./tests/api/test_reset.py)
 

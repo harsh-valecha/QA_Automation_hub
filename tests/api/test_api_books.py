@@ -1,5 +1,6 @@
 import pytest
 from pytest_check import check
+from concurrent.futures import ThreadPoolExecutor
 
 
 @pytest.mark.api
@@ -87,6 +88,33 @@ def test_api_first_book(api_client):
 
     check.equal(response.status_code, 200, msg="status code mismatch")
     check.is_true("title" in response_json, msg="title not present in response")
+
+
+@pytest.mark.api
+def test_concurrent_health_stats_list_and_detail_reads(api_client):
+    endpoints = {
+        "health": "/api/health",
+        "stats": "/api/stats",
+        "list": "/api/books",
+        "detail": "/api/books/1",
+    }
+
+    with ThreadPoolExecutor(max_workers=len(endpoints)) as executor:
+        futures = {
+            name: executor.submit(api_client.get, endpoint)
+            for name, endpoint in endpoints.items()
+        }
+        responses = {name: future.result() for name, future in futures.items()}
+
+    for name, response in responses.items():
+        assert response.status_code == 200, (
+            f"{name} endpoint returned status {response.status_code}"
+        )
+        assert response.headers.get("content-type", "").startswith("application/json")
+        assert isinstance(response.json(), dict), f"{name} response is not a JSON object"
+
+    check.is_true("items" in responses["list"].json(), msg="book list is missing items")
+    check.is_true("title" in responses["detail"].json(), msg="book detail is missing title")
 
 
 @pytest.mark.api
@@ -445,3 +473,39 @@ def test_update_book_validates_payload_and_duplicate_isbn(api_client,auth_token)
 
 
     
+@pytest.mark.api
+def test_book_mutations_require_authentication(api_client):
+    # post missing token
+    response = api_client.post('api/books',
+                               headers={"Authorization":""})
+
+    check.equal(response.status_code,401,msg='status code mismatch missing bearer post api/books')
+    response = api_client.put('api/books/1',
+                                   headers={"Authorization":""})
+    
+    check.equal(response.status_code,401,msg='status code mismatch missing bearer put api/books')
+    response = api_client.patch('api/books/1',
+                                   headers={"Authorization":""})
+    
+    check.equal(response.status_code,401,msg='status code mismatch missing bearer patch api/books')
+
+@pytest.mark.api
+@pytest.mark.parametrize("auth_token",["admin"],indirect=True)
+def test_delete_book_requires_admin(api_client,auth_token):
+    # admin deletion 
+    response = api_client.delete('api/books/1',
+                                 headers={'Authorization':f'Bearer {auth_token}'})
+    check.equal(response.status_code,204,msg='status code mismatch for admin deletion')
+
+
+@pytest.mark.api
+@pytest.mark.parametrize("auth_token",["user"],indirect=True)
+def test_delete_book_user_not_allowed(api_client,auth_token):
+    # admin deletion 
+    response = api_client.delete('api/books/1',
+                                 headers={'Authorization':f'Bearer {auth_token}'})
+    
+    check.equal(response.status_code,403,msg='status code mismatch for user deletion')
+
+
+
