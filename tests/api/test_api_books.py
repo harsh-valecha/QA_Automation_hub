@@ -234,6 +234,61 @@ def test_get_seeded_book_smoke(api_client):
     check.equal(response_json['category'],'tech',msg='category mismatch')
 
 
+
 @pytest.mark.api
 def test_list_books_search_filter_and_sort(api_client):
-    
+    endpoint = "/api/books"
+
+    # Search by title text.
+    search_response = api_client.get(endpoint, params={"q": "Program"})
+    assert search_response.status_code == 200
+
+    for book in search_response.json()["items"]:
+        check.is_true(
+            "Program" in book['title'],
+            msg="search returned a book whose title or author does not match",
+        )
+
+    # Filter by category.
+    category_response = api_client.get(endpoint, params={"category": "tech"})
+    assert category_response.status_code == 200
+    for book in category_response.json()["items"]:
+        check.equal(book["category"], "tech", msg="category filter mismatch")
+
+    # Gather prices to choose a meaningful inclusive range for the bounds check.
+    books = []
+    for page in (1, 2):
+        response = api_client.get(endpoint, params={"page": page})
+        assert response.status_code == 200
+        books.extend(response.json()["items"])
+
+    prices = sorted(book["price"] for book in books)
+    min_price = prices[len(prices) // 3]
+    max_price = prices[(2 * len(prices)) // 3]
+    bounds_response = api_client.get(
+        endpoint,
+        params={"min_price": min_price, "max_price": max_price},
+    )
+    assert bounds_response.status_code == 200
+    bounded_books = bounds_response.json()["items"]
+    check.is_true(bool(bounded_books), msg="price bounds returned no books")
+    for book in bounded_books:
+        check.is_true(
+            min_price <= book["price"] <= max_price,
+            msg="price filter returned a book outside the requested bounds",
+        )
+
+    # Sort by price in ascending order.
+    sort_response = api_client.get(
+        endpoint,
+        params={"sort": "price", "order": "asc"},
+    )
+    assert sort_response.status_code == 200
+    sorted_prices = [book["price"] for book in sort_response.json()["items"]]
+    check.equal(sorted_prices, sorted(sorted_prices), msg="books are not sorted by price")
+        
+
+
+
+
+

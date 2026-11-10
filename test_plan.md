@@ -57,7 +57,7 @@ Do not duplicate API-only or UI-only checks in the E2E suite.
 | `test_api_books_total_and_stock`                        | Check the paginated books list contains all 7 seeded books and their total stock is 89.                  | ✅ Complete    |
 | `test_list_books_defaults_and_schema_smoke`             | Check default list metadata and required fields on every returned book.                                  | ✅ Complete    |
 | `test_get_seeded_book_smoke`                            | Check ID 1 matches the known seed: Clean Code, ISBN `9780132350884`, category `tech`.                    | ✅ Complete    |
-| `test_list_books_search_filter_and_sort`                | Check search, category, price bounds, sorting, and no-match results.                                     | ⬜ Not started |
+| `test_list_books_search_filter_and_sort`                | Check search, category, price bounds, sorting, and no-match results.                                     | ✅ Complete    |
 | `test_list_books_invalid_query`                         | Check invalid pagination, filters, sorting, ordering, and price bounds return 400 / `bad_request`.       | ⬜ Not started |
 | `test_create_book_rejects_invalid_payloads`             | Check required fields, field limits, ISBN, price, stock, category, unknown fields, and malformed bodies. | ⬜ Not started |
 | `test_create_book_rejects_duplicate_isbn`               | Check duplicate ISBN returns 409 and does not change the book count.                                     | ⬜ Not started |
