@@ -1,7 +1,7 @@
 # QA Automation Practice Hub
 
 A small Flask app to practise **Playwright (Python)**, **API testing** and **CI/CD on GitHub Actions**.
-The `tests/` folder is intentionally empty: **you write the tests**. The app gives you something to test for every common concept, and every feature is reachable through both the **UI** and the **REST API**.
+The `tests/` tree contains examples organized by API, UI, and end-to-end coverage. The app gives you something to test for every common concept, and every feature is reachable through both the **UI** and the **REST API**.
 
 ## 1. Start
 
@@ -16,7 +16,7 @@ python run.py                          # http://127.0.0.1:5000
 
 Log in with `admin / admin123` (can delete) or `user / user123` (cannot delete).
 
-Your first test, to check the setup works (`tests/test_smoke.py`):
+Your first test, to check the setup works (`tests/ui/test_smoke.py`):
 
 ```python
 from playwright.sync_api import Page, expect

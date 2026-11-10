@@ -1,206 +1,150 @@
-# End-to-End Test Plan — QA Automation Practice Hub
+# Test Plan — QA Automation Practice Hub
 
 **Application:** Flask bookshelf app
-**Test types:** API (`requests`), UI (Playwright), hybrid E2E
-**Browsers:** Chromium first; Firefox and WebKit for smoke coverage
-**Pytest markers:** `smoke`, `api`, `ui`, `e2e`
+**Stack:** pytest, requests, Playwright
+**Markers:** `api`, `ui`, `e2e`, `smoke`
 
-## 1. Goal and scope
+## Status key
 
-Build a compact, progressive suite that exercises the app's distinct behavior and teaches the main automation techniques without repeating the same checks at every level.
+| Status | Meaning |
+|---|---|
+| ✅ Complete | Implemented and covered by the current test. |
+| 🟡 Partial | A test exists, but it does not yet cover the full scenario described. |
+| ⬜ Not started | Test still needs to be written. |
 
-In scope: REST endpoints, authentication and roles, book CRUD and validation, UI forms and navigation, CSV, playground interactions, test isolation, basic network/security/accessibility checks, and CI.
+This inventory is the checklist for remaining test work. Each scenario belongs
+to the file shown; update its status when the test is implemented and verified.
+Do not duplicate API-only or UI-only checks in the E2E suite.
 
-Out of scope: persistent-database behavior, production load testing, visual pixel-diff, and security behavior the app does not implement (for example rate limiting or CSRF).
+## API tests
 
-## 2. Application reference
+### [`tests/api/test_health_stats_slow.py`](./tests/api/test_health_stats_slow.py)
 
-### API
-
-| Method | Endpoint | Purpose |
+| Test | Description | Status |
 |---|---|---|
-| GET | `/api/health`, `/api/stats`, `/api/slow` | Health, aggregates, delayed response |
-| POST | `/api/auth/login` | Issue bearer token |
-| GET | `/api/auth/me` | Identify token owner |
-| GET | `/api/books` | List, search, filter, sort, paginate |
-| POST | `/api/books` | Create a book |
-| GET | `/api/books/{id}` | Read a book |
-| PUT/PATCH/DELETE | `/api/books/{id}` | Replace, partially update, delete |
-| POST | `/api/test/reset` | Restore seed data when test routes are enabled |
+| `test_api_health` | Check `GET /api/health` returns success, JSON content type, status `ok`, and version `1.0.0`. | ✅ Complete |
+| `test_api_repeated` | Call the health endpoint 20 times and check every response succeeds. | ✅ Complete |
+| `test_api_seed_stats_smoke` | Check seeded book count, stock total, and complete category counts from `GET /api/stats`. | ✅ Complete |
+| `test_api_slow_wait` | Check `GET /api/slow?ms=0` succeeds and reports zero wait time. | ✅ Complete |
+| `test_api_slow_delay_limits` | Check zero, default, and capped slow delays report the expected wait and take a reasonable amount of time. | ⬜ Not started |
+| `test_api_slow_rejects_non_integer_delay` | Check a non-integer `ms` value returns 400 with `bad_request`. | ⬜ Not started |
+| `test_api_stats_follow_book_lifecycle` | Create, update, and delete a book; verify stats change and return to the seeded values. | ⬜ Not started |
 
-### UI
+### [`tests/api/test_auth.py`](./tests/api/test_auth.py)
 
-`/`, `/login`, `/logout`, `/books`, `/books/new`, `/books/{id}`, `/books/{id}/edit`, `/books/{id}/delete`, `/books/export.csv`, `/playground`, `/playground/upload`, and `/playground/frame`.
-
-### Seed data
-
-- Seven books; default page size is five (pages contain five and two books).
-- Category counts: tech 3, fiction 2, science 1, history 1.
-- Seed stock total: **89**.
-- Demo users: `admin/admin123` (admin) and `user/user123` (user).
-
-## 3. How to keep the suite small
-
-- Each scenario below is listed once. `smoke` is a marker on selected API/UI tests, not a second copy of them.
-- Parameterize related inputs (for example invalid book fields, query values, or dialog choices) rather than writing one nearly identical test per value.
-- Reuse fixtures for the server, reset, API client, logged-in users, and unique valid book data.
-- For CRUD, assert the result through a follow-up read or aggregate when that proves a distinct outcome; do not repeat the same field assertions in every layer.
-- Start with Chromium and add other browsers only after the UI suite is stable.
-
-### Suggested fixtures
-
-1. `base_url` / `live_server` and an autouse reset before each test.
-2. `api_client` and `admin_token` / `user_token`.
-3. `valid_book()` with a unique 13-digit ISBN.
-4. `logged_in_page(role)` for UI tests.
-
-## 4. Level 0 — Environment readiness
-
-**Checklist (not separate automated test cases):**
-
-- Install development dependencies and the Chromium browser.
-- Start the app with `ENABLE_TEST_ROUTES=1`; confirm `/api/health` responds.
-- Run pytest and confirm collection and server startup/shutdown work.
-- Confirm the reset fixture restores seven seed books.
-
-**Ready when:** the test environment starts reliably and at least one test can run.
-
-## 5. API tests — implement across Levels 1–2
-
-**Markers:** `api`; add `smoke` to the fast core cases below. These are the API cases to implement once; later levels should extend them, not recreate them.
-
-### 5.1 Health and stats
-
-| ID | Scenario | Essential assertions |
+| Test | Description | Status |
 |---|---|---|
-| API-01 `smoke` | Health response | 200, JSON content type, exact `status` and `version` fields |
-| API-02 `smoke` | Seed stats | 200, 7 books, stock 89, exact category counts |
-| API-03 | Stats after a book lifecycle | Create, change stock, and delete a book; assert the aggregate changes correctly at each meaningful step |
+| `test_auth_login` | Check admin login returns a non-empty bearer token and the admin role. | ✅ Complete |
+| `test_auth_me` | Check an admin bearer token returns the correct username and role from `/api/auth/me`. | ✅ Complete |
+| `test_auth_me_no_token` | Check `/api/auth/me` rejects a request without a token. | ✅ Complete |
+| `test_auth_login_returns_token_for_each_role` | Check both admin and user login responses and use each token to verify `/api/auth/me`. | 🟡 Partial |
+| `test_auth_login_rejects_invalid_credentials` | Check wrong passwords and unknown users return 401 without issuing a token. | ⬜ Not started |
+| `test_auth_login_validates_request_body` | Check missing/empty fields, non-object JSON, malformed JSON, and non-JSON bodies return the expected errors. | ⬜ Not started |
+| `test_auth_me_rejects_invalid_bearer_token` | Check malformed authorization schemes and unknown tokens return 401 with a Bearer challenge. | ⬜ Not started |
 
-### 5.2 Authentication
+### [`tests/api/test_api_books.py`](./tests/api/test_api_books.py)
 
-| ID | Scenario | Essential assertions |
+| Test | Description | Status |
 |---|---|---|
-| API-04 `smoke` | Login as admin and user, then call `/me` | Non-empty bearer token; returned username and role match each account |
-| API-05 | Invalid login and invalid/missing bearer token | Login failures do not issue a token; protected endpoint returns 401 |
-| API-06 | Login request validation | Parameterize missing/empty fields and malformed/non-object JSON; assert the documented 4xx response and error shape |
+| `test_api_books` | Check the default book-list total, first-page size, current page, and page count. | ✅ Complete |
+| `test_api_first_book` | Check seeded book ID 1 can be retrieved and includes a title. | ✅ Complete |
+| `test_api_books_out_of_bound` | Check an unknown book ID returns 404 / `not_found`, and unsupported methods return JSON 405. | 🟡 Partial |
+| `test_api_books_valid_token` | Check an admin can create a book, verify its submitted fields, and retrieve it using `Location`. | 🟡 Partial |
+| `test_api_books_patch` | Check an admin can PATCH a book, unsupplied values are preserved, and PUT replaces the full book. | 🟡 Partial |
+| `test_api_books_delete_multiple` | Check deleting a book succeeds once and returns 404 on a repeated delete. | ✅ Complete |
+| `test_api_books_pagination` | Check pagination returns all books without missing or duplicate IDs, using `per_page`. | ✅ Complete |
+| `test_api_category_counts` | Check category counts across all pages of the books list. | ✅ Complete |
+| `test_api_books_total_and_stock` | Check the paginated books list contains all 7 seeded books and their total stock is 89. | ✅ Complete |
+| `test_list_books_defaults_and_schema_smoke` | Check default list metadata and required fields on every returned book. | ⬜ Not started |
+| `test_get_seeded_book_smoke` | Check ID 1 matches the known seed: Clean Code, ISBN `9780132350884`, category `tech`. | ⬜ Not started |
+| `test_list_books_search_filter_and_sort` | Check search, category, price bounds, sorting, and no-match results. | ⬜ Not started |
+| `test_list_books_invalid_query` | Check invalid pagination, filters, sorting, ordering, and price bounds return 400 / `bad_request`. | ⬜ Not started |
+| `test_create_book_rejects_invalid_payloads` | Check required fields, field limits, ISBN, price, stock, category, unknown fields, and malformed bodies. | ⬜ Not started |
+| `test_create_book_rejects_duplicate_isbn` | Check duplicate ISBN returns 409 and does not change the book count. | ⬜ Not started |
+| `test_update_book_validates_payload_and_duplicate_isbn` | Check incomplete/invalid updates and duplicate ISBN errors. | ⬜ Not started |
+| `test_book_mutations_require_authentication` | Check POST, PUT, and PATCH reject missing or invalid tokens without changing data. | ⬜ Not started |
+| `test_delete_book_requires_admin` | Check admin delete succeeds, user delete is forbidden, and anonymous delete is unauthorized. | ⬜ Not started |
+| `test_parallel_book_reads_succeed` | Check concurrent health, stats, list, and book-detail reads return valid responses. | ⬜ Not started |
 
-### 5.3 Books API
+### [`tests/api/test_reset.py`](./tests/api/test_reset.py)
 
-| ID | Scenario | Essential assertions |
+| Test | Description | Status |
 |---|---|---|
-| API-07 `smoke` | Default list and one seeded book | 200, pagination metadata and item schema; detail response matches the selected book |
-| API-08 | Search/filter/sort combination | Use a known query with category and price bounds; assert matching items and ordering. Include a no-match query |
-| API-09 | Pagination and invalid query values | Check page 2 and an out-of-range page; parameterize representative invalid page, page-size, category, sort, and price values and assert 400 |
-| API-10 `smoke` | Create a valid book | 201, response fields, `Location` resolves to the same book, list/stats reflect creation |
-| API-11 | Create validation and duplicate ISBN | Parameterize required/type/range/ISBN/category errors; separately assert duplicate ISBN returns conflict and does not add a book |
-| API-12 `smoke` | PUT and PATCH semantics | PUT replaces the submitted resource; PATCH changes only the supplied field; verify with GET |
-| API-13 `smoke` | Delete and role permissions | Admin delete returns 204 then GET returns 404; user cannot delete and the book remains |
-| API-14 | Missing resource and unsupported method | Unknown book is JSON 404; unsupported API method returns 405 |
+| `test_api_reset` | Check the test reset endpoint responds with 204. | 🟡 Partial |
+| `test_reset_restores_seed_data` | Change book data, reset it, and verify seed stats and book ID 1 are restored. | ⬜ Not started |
+| `test_reset_route_is_disabled_by_default` | Check a separate app with test routes disabled returns 404 for reset. | ⬜ Not started |
 
-### 5.4 Slow endpoint, reset, and errors
+## UI tests
 
-| ID | Scenario | Essential assertions |
+### [`tests/ui/test_smoke.py`](./tests/ui/test_smoke.py)
+
+| Test | Description | Status |
 |---|---|---|
-| API-15 | Slow endpoint boundaries | Parameterize zero, default, and over-limit delay; check `waited_ms` and use a tolerant elapsed-time bound |
-| API-16 | Invalid slow endpoint input | Non-numeric input returns the documented 400 error |
-| API-17 | Reset behavior | Reset returns 204 and restores seed totals; verify it is unavailable when test routes are disabled |
+| `test_books_page_loads` | Open `/books` and check the page title is Books. | 🟡 Partial |
+| `test_core_pages_render_smoke` | Check login, playground, and playground-frame pages render without uncaught errors. | ⬜ Not started |
+| `test_root_redirects_and_unknown_route_renders_404` | Check the root redirect and unknown-route 404 page. | ⬜ Not started |
+| `test_books_csv_download_smoke` | Check CSV download filename, content type, header columns, and seven data rows. | ⬜ Not started |
+| `test_health_failure_keeps_books_page_usable` | Fail the health request and check the page remains usable with a down badge. | ⬜ Not started |
+| `test_stats_failure_shows_unavailable_state` | Fail the stats request and check the page remains usable with unavailable stats. | ⬜ Not started |
 
-**Level 1 exit:** the marked smoke tests pass quickly and independently. The remaining API cases can be added as Level 2 without duplicating these.
+### [`tests/ui/test_ui_books.py`](./tests/ui/test_ui_books.py)
 
-## 6. Level 2 — API coverage complete
-
-Section 5 is the complete, deduplicated API test inventory. Implement its `smoke` cases in Level 1, then add the remaining cases in this level. Use parameterization for validation inputs; add a separate case only when the behavior or assertion is genuinely different.
-
-**Completion check:** every API route/method is exercised, including success, relevant error status, authentication/role behavior, and response shape. Do not separately test token expiration: tokens do not expire in this app.
-
-## 7. Level 3 — UI smoke
-
-**Markers:** `ui`, `smoke`
-
-| ID | Scenario | Essential assertions |
+| Test | Description | Status |
 |---|---|---|
-| UI-01 `smoke` | Core page load (parameterize books, login, playground, and frame) | Page heading/main content appears; no uncaught page error |
-| UI-02 `smoke` | Root, unknown route, and anonymous navigation | Root reaches books; unknown page shows 404; anonymous navigation shows the expected links |
-| UI-03 `smoke` | Books page API indicators | Health badge reaches ready state and stats display the seed totals |
-| UI-04 `smoke` | CSV route | Download starts with the expected filename and CSV content type |
+| `test_login_logout_and_role_navigation` | Check admin/user navigation, role-specific delete controls, and logout. | ⬜ Not started |
+| `test_failed_login_and_unsafe_next_redirect` | Check failed-login feedback and that unsafe `next` URLs cannot redirect off-site. | ⬜ Not started |
+| `test_anonymous_access_to_protected_book_forms` | Check anonymous visits to create/edit pages redirect to login. | ⬜ Not started |
+| `test_books_search_filters_sort_and_pagination` | Check visible results, pagination, retained filters, reset, and invalid-filter feedback. | ⬜ Not started |
+| `test_create_book_form_success_and_validation` | Check successful creation plus validation errors and retained form values. | ⬜ Not started |
+| `test_edit_book_form_prefills_saves_and_rejects_invalid_values` | Check edit form values, successful edits, validation, and retained input. | ⬜ Not started |
+| `test_book_detail_and_delete_confirmation` | Check book details, delete confirmation, and user delete restrictions. | ⬜ Not started |
+| `test_book_title_is_rendered_as_text` | Check user-supplied HTML-like titles render as text and do not execute. | ⬜ Not started |
+| `test_login_and_book_form_controls_have_labels` | Check login and book form controls have usable labels and login works by keyboard. | ⬜ Not started |
 
-**Level 3 exit:** the UI smoke marker passes in Chromium.
+### [`tests/ui/test_files_playground.py`](./tests/ui/test_files_playground.py)
 
-## 8. Level 4 — UI functional
-
-**Marker:** `ui`
-
-| ID | Scenario | Essential assertions / technique |
+| Test | Description | Status |
 |---|---|---|
-| UI-05 | Login, logout, and role-based navigation | Both roles can add books, only admin can delete; logout clears the session; anonymous access to a protected form redirects to login |
-| UI-06 | Failed login and safe `next` redirect | Error is visible, password is not retained, and external redirect targets are rejected |
-| UI-07 | Books list interaction | Search/category/sort and pagination update results and preserve query state; reset filters restores defaults |
-| UI-08 | Create book form | Valid submit reaches detail; parameterize representative invalid fields and assert field errors/retained input |
-| UI-09 | Edit book form | Values are prefilled; a valid edit is saved; invalid ISBN/field input is rejected |
-| UI-10 | Book detail and delete confirmation | Detail shows the book; confirm deletes it, dismiss leaves it; verify the result in the list |
-| UI-11 | CSV download and upload | Use Playwright download handling and parse a row; upload a valid file and verify the echoed name/size |
-| UI-12 | Playground wait and dialogs | Wait for a delayed result; handle alert/confirm/prompt (parameterize accept/dismiss outcomes) |
-| UI-13 | Playground inputs and keyboard | Fill/check/select controls and verify enabled state/result; verify Enter and Escape behavior |
-| UI-14 | Playground hover and drag/drop | Tooltip appears on hover; drag a card and assert its destination |
-| UI-15 | Iframe, new tab, and dynamic list | Use frame locator and new-page handling; add/remove list items and assert count/content |
+| `test_playground_upload_echoes_filename_and_size` | Check uploading an in-memory file displays its filename and byte size. | ⬜ Not started |
+| `test_playground_slow_result_waits_for_response` | Check the slow-action spinner and the completed result. | ⬜ Not started |
+| `test_playground_alert_confirm_and_prompt` | Check alert, confirm, and prompt dialogs for accept, dismiss, and input cases. | ⬜ Not started |
+| `test_playground_inputs_enable_submit_and_show_values` | Check input, checkbox, select, and submit behavior. | ⬜ Not started |
+| `test_playground_keyboard_enter_and_escape` | Check Enter reports text and Escape clears the input. | ⬜ Not started |
+| `test_playground_hover_tooltip_and_drag_drop` | Check hover tooltip and drag/drop destination. | ⬜ Not started |
+| `test_playground_iframe_new_tab_and_dynamic_list` | Check iframe interaction, new-tab content, and dynamic-list add/remove behavior. | ⬜ Not started |
 
-## 9. Level 5 — Hybrid E2E
+## End-to-end tests
 
-**Marker:** `e2e`. These cover cross-layer outcomes only; single-layer behavior is already covered above.
+### [`tests/e2e/test_flows.py`](./tests/e2e/test_flows.py)
 
-| ID | Scenario | Essential assertions |
+| Test | Description | Status |
 |---|---|---|
-| E2E-01 | UI creates a book, API verifies it | UI submission succeeds; API GET and stats show the created book |
-| E2E-02 | API changes/deletes a book, UI verifies it | UI reflects the changed data, then no longer shows the deleted book |
-| E2E-03 | User/admin authorization across UI and API | User cannot delete (including direct request); admin can; verify final state |
+| `test_ui_created_book_is_visible_through_api` | Create a book in the UI and verify its data and stats through the API. | ⬜ Not started |
+| `test_api_updated_and_deleted_book_is_reflected_in_ui` | Update/delete through the API and verify the corresponding UI state. | ⬜ Not started |
+| `test_user_and_admin_delete_permissions_match_across_ui_and_api` | Verify user/admin delete permissions and final state across both layers. | ⬜ Not started |
 
-## 10. Level 6 — Cross-cutting checks
+## Shared expectations
 
-Add these after the functional suite is stable. They are intentionally representative, not a second full pass over every page/endpoint.
+- Seed data: 7 books, total stock 89; categories: 3 tech, 2 fiction,
+  1 science, and 1 history.
+- API book fields use `category` (not `genre`). The default list page size is 5.
+- Demo accounts are `admin/admin123` and `user/user123`; only admins may delete.
+- The autouse fixture resets data before each test. Use returned IDs for created
+  books and obtain tokens within each test.
+- Use `book_factory` for valid unique payloads; its category field is `category`.
+- The reset route is enabled by the test server. Do not change shared server
+  configuration to test the route-disabled case.
+- Use `data-testid` selectors for UI tests. UI error spans currently lack an
+  `aria-describedby` association; do not assert that association.
 
-| ID | Focus | Scenario and assertion |
-|---|---|---|
-| NF-01 | Network resilience | Abort health/stats requests; page remains usable and shows the appropriate unavailable state |
-| NF-02 | Security basics | User input is rendered as text (no script execution); external login redirect is rejected; errors reveal no credentials/tokens |
-| NF-03 | Accessibility | Form inputs have labels and errors are associated with fields; keyboard can submit login and operate a playground control |
-| NF-04 | Robustness | Parallel read requests all succeed; repeated delete gives 204 then 404 |
-| NF-05 | Cross-browser | Run UI smoke on Firefox and WebKit; keep Chromium as the main UI run |
-| NF-06 | Timing | Check one normal endpoint has a generous local response-time ceiling; verify slow endpoint cap in API-15 |
+## Running and completion
 
-## 11. Level 7 — CI quality gates
+```bash
+pytest
+pytest -m "not ui"
+pytest -m ui --browser chromium
+```
 
-- Run API and UI suites by marker; keep smoke tests fast.
-- Run Chromium on each change; run Firefox/WebKit smoke in a browser matrix.
-- Publish JUnit/HTML reports and capture traces/screenshots on failure.
-- Fail on lint, collection errors, or test failures; remove any temporary allowance for an empty suite.
-- Track runtime and repeat failures to identify flakiness rather than adding arbitrary retries.
-
-## 12. Exit criteria and coverage
-
-- All levels pass in CI; tests are isolated by reset and do not rely on execution order.
-- Every listed API route/method and UI feature has at least one meaningful assertion.
-- Book validation is data-driven across required fields, types, boundaries, and duplicate ISBN.
-- Auth success/failure and admin/user permissions are covered at API and UI boundaries.
-- API/UI errors, list filters/pagination, CSV, playground controls, and core cross-layer flows are covered.
-- No unexpected page errors; cross-browser smoke is green.
-
-## 13. Implementation order
-
-1. `tests/api/test_health_stats_slow.py` — API-01–03, API-15–16
-2. `tests/api/test_auth.py` — API-04–06
-3. `tests/api/test_books.py` — API-07–14
-4. `tests/api/test_reset.py` — API-17
-5. `tests/ui/test_smoke.py` — UI-01–04
-6. `tests/ui/test_books.py` — UI-05–10
-7. `tests/ui/test_files_playground.py` — UI-11–15
-8. `tests/e2e/test_flows.py` — E2E-01–03
-9. Add NF checks and CI gates after the above are stable.
-
-## 14. Notes
-
-- Reset restores books but tokens survive; each test should obtain its own token.
-- UI edit submits all fields; a blank stock value becomes zero.
-- UI invalid filters are reset and reported in the UI rather than returning the API's 400.
-- Use returned IDs for created books; IDs restart after reset.
-- Drag/drop and dialog behavior can vary by browser; only add evidence-based skips.
+Run the browser-matrix smoke tests on Firefox and WebKit as configured in CI.
+The inventory is complete when all intended scenarios above are implemented,
+their status is updated, and the relevant marked suites pass.

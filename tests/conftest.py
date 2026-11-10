@@ -166,7 +166,7 @@ def book_factory():
             "title": f"Test Book {isbn}",
             "author": "Test Author",
             "isbn": isbn,
-            "genre": "Fiction",
+            "category": "Fiction",
         }
 
     return make_book
