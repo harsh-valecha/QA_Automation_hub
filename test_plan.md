@@ -32,15 +32,15 @@ Do not duplicate API-only or UI-only checks in the E2E suite.
 
 ### [`tests/api/test_auth.py`](./tests/api/test_auth.py)
 
-| Test                                          | Description                                                                                                  | Status         |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------- |
-| `test_auth_login`                             | Check admin login returns a non-empty bearer token and the admin role.                                       | ✅ Complete    |
-| `test_auth_me`                                | Check an admin bearer token returns the correct username and role from `/api/auth/me`.                       | ✅ Complete    |
-| `test_auth_me_no_token`                       | Check `/api/auth/me` rejects a request without a token.                                                      | ✅ Complete    |
-| `test_auth_login_returns_token_for_each_role` | Check both admin and user login responses and use each token to verify `/api/auth/me`.                       | 🟡 Partial     |
-| `test_auth_login_rejects_invalid_credentials` | Check wrong passwords and unknown users return 401 without issuing a token.                                  | ⬜ Not started |
-| `test_auth_login_validates_request_body`      | Check missing/empty fields, non-object JSON, malformed JSON, and non-JSON bodies return the expected errors. | ⬜ Not started |
-| `test_auth_me_rejects_invalid_bearer_token`   | Check malformed authorization schemes and unknown tokens return 401 with a Bearer challenge.                 | ⬜ Not started |
+| Test                                          | Description                                                                                                  | Status      |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ----------- |
+| `test_auth_login`                             | Check admin login returns a non-empty bearer token and the admin role.                                       | ✅ Complete |
+| `test_auth_me`                                | Check an admin bearer token returns the correct username and role from `/api/auth/me`.                       | ✅ Complete |
+| `test_auth_me_no_token`                       | Check `/api/auth/me` rejects a request without a token.                                                      | ✅ Complete |
+| `test_auth_login_returns_token_for_each_role` | Check both admin and user login responses and use each token to verify `/api/auth/me`.                       | ✅ Complete |
+| `test_auth_login_rejects_invalid_credentials` | Check wrong passwords and unknown users return 401 without issuing a token.                                  | ✅ Complete |
+| `test_auth_login_validates_request_body`      | Check missing/empty fields, non-object JSON, malformed JSON, and non-JSON bodies return the expected errors. | ✅ Complete |
+| `test_auth_me_rejects_invalid_bearer_token`   | Check malformed authorization schemes and unknown tokens return 401 with a Bearer challenge.                 | ✅ Complete |
 
 ### [`tests/api/test_api_books.py`](./tests/api/test_api_books.py)
 

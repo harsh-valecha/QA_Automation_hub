@@ -1,5 +1,4 @@
 import json
-
 import pytest
 from pytest_check import check
 
