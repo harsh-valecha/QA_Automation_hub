@@ -97,21 +97,30 @@ def test_api_books_out_of_bound(api_client):
     check.equal(response.status_code, 404, msg="status code mismatch")
     check.equal(response_json["error"], "not_found", msg="Book with mentioned index not found")
 
+    unsupported_response = api_client.post("/api/books/9999")
+    check.equal(
+        unsupported_response.status_code,
+        405,
+        msg="unsupported method should return 405",
+    )
+
+
 
 @pytest.mark.api
 @pytest.mark.parametrize("auth_token", ["admin"], indirect=True)
 def test_api_books_valid_token(api_client, auth_token):
+    submitted_book = {
+        "title": "The ghost town",
+        "author": "kamlesh jagpat",
+        "isbn": "1111111111111",
+        "price": 200,
+        "stock": 10,
+        "category": "history",
+    }
     response = api_client.post(
         "/api/books",
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={
-            "title": "The ghost town",
-            "author": "kamlesh jagpat",
-            "isbn": "1111111111111",
-            "price": 200,
-            "stock": 10,
-            "category": "history",
-        },
+        json=submitted_book,
     )
 
     response_json = response.json()
@@ -119,19 +128,67 @@ def test_api_books_valid_token(api_client, auth_token):
     check.is_true("Location" in response.headers, msg="location not found in response headers")
     check.is_true("created_at" in response_json, msg="created_at not present in response json")
 
+    for field, value in submitted_book.items():
+        check.equal(response_json[field], value, msg=f"created book {field} mismatch")
+
+    retrieved_response = api_client.get(response.headers["Location"])
+    check.equal(retrieved_response.status_code, 200, msg="created book retrieval failed")
+    retrieved_book = retrieved_response.json()
+    for field, value in submitted_book.items():
+        check.equal(retrieved_book[field], value, msg=f"retrieved book {field} mismatch")
+
 
 @pytest.mark.api
 @pytest.mark.parametrize("auth_token", ["admin"], indirect=True)
 def test_api_books_patch(api_client, auth_token):
-    response = api_client.patch(
+    headers = {"Authorization": f"Bearer {auth_token}"}
+    original_response = api_client.get("/api/books/1")
+    assert original_response.status_code == 200
+    original_book = original_response.json()
+
+    patch_response = api_client.patch(
         "/api/books/1",
-        headers={"Authorization": f"Bearer {auth_token}"},
+        headers=headers,
         json={"title": "Totally true"},
     )
-    response_json = response.json()
+    check.equal(patch_response.status_code, 200, msg="PATCH status code mismatch")
+    check.equal(
+        patch_response.json()["title"],
+        "Totally true",
+        msg="PATCH title mismatch",
+    )
 
-    check.equal(response.status_code, 200, msg="Status code mismatch")
-    check.equal(response_json["title"], "Totally true", msg="patch not updated correctly")
+    patched_response = api_client.get("/api/books/1")
+    assert patched_response.status_code == 200
+    patched_book = patched_response.json()
+    for field, value in original_book.items():
+        if field != "title":
+            check.equal(
+                patched_book[field],
+                value,
+                msg=f"PATCH changed unsupplied {field}",
+            )
+
+    replacement_book = {
+        "title": "Replacement title",
+        "author": "Replacement author",
+        "isbn": "2222222222222",
+        "price": 300,
+        "stock": 4,
+        "category": "science",
+    }
+    put_response = api_client.put(
+        "/api/books/1",
+        headers=headers,
+        json=replacement_book,
+    )
+    check.equal(put_response.status_code, 200, msg="PUT status code mismatch")
+
+    replaced_response = api_client.get("/api/books/1")
+    assert replaced_response.status_code == 200
+    replaced_book = replaced_response.json()
+    for field, value in replacement_book.items():
+        check.equal(replaced_book[field], value, msg=f"PUT {field} mismatch")
 
 
 @pytest.mark.api
@@ -143,3 +200,40 @@ def test_api_books_delete_multiple(api_client, auth_token):
 
     check.equal(response_first.status_code, 204, msg="Error in deletion")
     check.equal(response_second.status_code, 404, msg="Mismatch in second response deletion")
+
+
+@pytest.mark.api
+@pytest.mark.smoke
+def test_list_books_defaults_and_schema_smoke(api_client):
+    response = api_client.get("/api/books")
+    assert response.status_code == 200
+    response_json = response.json()
+
+    check.equal(response_json["page"], 1, msg="default page mismatch")
+    check.equal(response_json["per_page"], 5, msg="default page size mismatch")
+    check.equal(response_json["total"], 7, msg="total books mismatch")
+    check.equal(response_json["pages"], 2, msg="total pages mismatch")
+
+    required_fields = ("id", "title", "author", "isbn", "price", "stock", "category")
+    for book_index, book in enumerate(response_json["items"], start=1):
+        for field in required_fields:
+            check.is_true(
+                field in book,
+                msg=f"book {book_index} is missing required field: {field}",
+            )
+
+
+@pytest.mark.api
+@pytest.mark.smoke
+def test_get_seeded_book_smoke(api_client):
+    response = api_client.get('api/books/1')
+    response_json = response.json()
+
+    check.equal(response_json['isbn'],'9780132350884',msg='isbn not matching')
+    check.equal(response_json['title'],'Clean Code',msg='title mismatch')
+    check.equal(response_json['category'],'tech',msg='category mismatch')
+
+
+@pytest.mark.api
+def test_list_books_search_filter_and_sort(api_client):
+    

@@ -48,15 +48,15 @@ Do not duplicate API-only or UI-only checks in the E2E suite.
 | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------- |
 | `test_api_books`                                        | Check the default book-list total, first-page size, current page, and page count.                        | ✅ Complete    |
 | `test_api_first_book`                                   | Check seeded book ID 1 can be retrieved and includes a title.                                            | ✅ Complete    |
-| `test_api_books_out_of_bound`                           | Check an unknown book ID returns 404 / `not_found`, and unsupported methods return JSON 405.             | 🟡 Partial     |
-| `test_api_books_valid_token`                            | Check an admin can create a book, verify its submitted fields, and retrieve it using `Location`.         | 🟡 Partial     |
-| `test_api_books_patch`                                  | Check an admin can PATCH a book, unsupplied values are preserved, and PUT replaces the full book.        | 🟡 Partial     |
+| `test_api_books_out_of_bound`                           | Check an unknown book ID returns 404 / `not_found`, and unsupported methods return JSON 405.             | ✅ Complete    |
+| `test_api_books_valid_token`                            | Check an admin can create a book, verify its submitted fields, and retrieve it using `Location`.         | ✅ Complete    |
+| `test_api_books_patch`                                  | Check an admin can PATCH a book, unsupplied values are preserved, and PUT replaces the full book.        | ✅ Complete    |
 | `test_api_books_delete_multiple`                        | Check deleting a book succeeds once and returns 404 on a repeated delete.                                | ✅ Complete    |
 | `test_api_books_pagination`                             | Check pagination returns all books without missing or duplicate IDs, using `per_page`.                   | ✅ Complete    |
 | `test_api_category_counts`                              | Check category counts across all pages of the books list.                                                | ✅ Complete    |
 | `test_api_books_total_and_stock`                        | Check the paginated books list contains all 7 seeded books and their total stock is 89.                  | ✅ Complete    |
-| `test_list_books_defaults_and_schema_smoke`             | Check default list metadata and required fields on every returned book.                                  | ⬜ Not started |
-| `test_get_seeded_book_smoke`                            | Check ID 1 matches the known seed: Clean Code, ISBN `9780132350884`, category `tech`.                    | ⬜ Not started |
+| `test_list_books_defaults_and_schema_smoke`             | Check default list metadata and required fields on every returned book.                                  | ✅ Complete    |
+| `test_get_seeded_book_smoke`                            | Check ID 1 matches the known seed: Clean Code, ISBN `9780132350884`, category `tech`.                    | ✅ Complete    |
 | `test_list_books_search_filter_and_sort`                | Check search, category, price bounds, sorting, and no-match results.                                     | ⬜ Not started |
 | `test_list_books_invalid_query`                         | Check invalid pagination, filters, sorting, ordering, and price bounds return 400 / `bad_request`.       | ⬜ Not started |
 | `test_create_book_rejects_invalid_payloads`             | Check required fields, field limits, ISBN, price, stock, category, unknown fields, and malformed bodies. | ⬜ Not started |
