@@ -58,10 +58,10 @@ Do not duplicate API-only or UI-only checks in the E2E suite.
 | `test_list_books_defaults_and_schema_smoke`             | Check default list metadata and required fields on every returned book.                                  | ✅ Complete    |
 | `test_get_seeded_book_smoke`                            | Check ID 1 matches the known seed: Clean Code, ISBN `9780132350884`, category `tech`.                    | ✅ Complete    |
 | `test_list_books_search_filter_and_sort`                | Check search, category, price bounds, sorting, and no-match results.                                     | ✅ Complete    |
-| `test_list_books_invalid_query`                         | Check invalid pagination, filters, sorting, ordering, and price bounds return 400 / `bad_request`.       | ⬜ Not started |
-| `test_create_book_rejects_invalid_payloads`             | Check required fields, field limits, ISBN, price, stock, category, unknown fields, and malformed bodies. | ⬜ Not started |
-| `test_create_book_rejects_duplicate_isbn`               | Check duplicate ISBN returns 409 and does not change the book count.                                     | ⬜ Not started |
-| `test_update_book_validates_payload_and_duplicate_isbn` | Check incomplete/invalid updates and duplicate ISBN errors.                                              | ⬜ Not started |
+| `test_list_books_invalid_query`                         | Check invalid pagination, filters, sorting, ordering, and price bounds return 400 / `bad_request`.       | ✅ Complete    |
+| `test_create_book_rejects_invalid_payloads`             | Check required fields, field limits, ISBN, price, stock, category, unknown fields, and malformed bodies. | ✅ Complete    |
+| `test_create_book_rejects_duplicate_isbn`               | Check duplicate ISBN returns 409 and does not change the book count.                                     | ✅ Complete    |
+| `test_update_book_validates_payload_and_duplicate_isbn` | Check incomplete/invalid updates and duplicate ISBN errors.                                              | ✅ Complete    |
 | `test_book_mutations_require_authentication`            | Check POST, PUT, and PATCH reject missing or invalid tokens without changing data.                       | ⬜ Not started |
 | `test_delete_book_requires_admin`                       | Check admin delete succeeds, user delete is forbidden, and anonymous delete is unauthorized.             | ⬜ Not started |
 | `test_parallel_book_reads_succeed`                      | Check concurrent health, stats, list, and book-detail reads return valid responses.                      | ⬜ Not started |

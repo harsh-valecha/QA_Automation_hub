@@ -289,6 +289,159 @@ def test_list_books_search_filter_and_sort(api_client):
         
 
 
+@pytest.mark.api
+def test_list_books_invalid_query(api_client):
+    # invalid pagination
+    response = api_client.get('api/books',
+                              params = {'page':'A'})
+
+    check.equal(response.status_code,400,msg='invalid pagination status mismatch')
+
+    # A non-numeric price bound is an invalid filter value.
+    response = api_client.get(
+        "/api/books",
+        params={"min_price": "not-a-price"},
+    )
+    check.equal(response.status_code, 400, msg="invalid min price status code mismatch")
+
+    response = api_client.get(
+            "/api/books",
+            params={"max_price": "not-a-price"},
+        )
+    check.equal(response.status_code, 400, msg="invalid max price status code mismatch")
+
+    # invalid sort when column does not exist
+    response = api_client.get(
+        "api/books",
+        params={'sort':'type'}
+    )
+    check.equal(response.status_code, 400, msg="invalid sort status code mismatch")
+
+
+@pytest.mark.api
+@pytest.mark.parametrize("auth_token",["admin"],indirect=True)
+def test_create_book_rejects_invalid_payloads(api_client,auth_token):
+    response = api_client.post('api/books',
+                               headers={'Authorization':f'Bearer {auth_token}'},
+                               json={
+                                "title":'',
+                                "author": "Replacement author",
+                                "isbn": "2222222222222",
+                                "price": 300,
+                                "stock": 4,
+                                "category": "science",  
+                               })
+    check.equal(response.status_code,422,msg='invalid book payload title status code mismatch')
+
+    response = api_client.post('api/books',
+                                   headers={'Authorization':f'Bearer {auth_token}'},
+                                   json={
+                                    "title":'test title',
+                                    "author": None,
+                                    "isbn": "2222222222222",
+                                    "price": 300,
+                                    "stock": 4,
+                                    "category": "science",  
+                                   })
+    check.equal(response.status_code,422,msg='invalid book payload author status code mismatch')
+
+    response = api_client.post('api/books',
+                                       headers={'Authorization':f'Bearer {auth_token}'},
+                                       json={
+                                        "title":'test title',
+                                        "author": 'test author',
+                                        "isbn": "22222222222",
+                                        "price": 300,
+                                        "stock": 4,
+                                        "category": "science",  
+                                       })
+    check.equal(response.status_code,422,msg='invalid book payload isbn status code mismatch')
+
+    response = api_client.post('api/books',
+                                           headers={'Authorization':f'Bearer {auth_token}'},
+                                           json={
+                                            "title":'test title',
+                                            "author": 'test author',
+                                            "isbn": "22222222222",
+                                            "price": "not a price",
+                                            "stock": 4,
+                                            "category": "science",  
+                                           })
+    check.equal(response.status_code,422,msg='invalid book payload price status code mismatch')
+
+    response = api_client.post('api/books',
+                                               headers={'Authorization':f'Bearer {auth_token}'},
+                                               json={
+                                                "title":'test title',
+                                                "author": 'test author',
+                                                "isbn": "2222222222222",
+                                                "price": 123,
+                                                "stock": 'not a stock',
+                                                "category": "science",  
+                                               })
+    check.equal(response.status_code,422,msg='invalid book payload stock status code mismatch')
+
+    response = api_client.post('api/books',
+                                                   headers={'Authorization':f'Bearer {auth_token}'},
+                                                   json={
+                                                    "title":'test title',
+                                                    "author": 'test author',
+                                                    "isbn": "2222222222222",
+                                                    "price": 123,
+                                                    "stock": 23,
+                                                    "category": 'cooool'
+                                                   })
+    check.equal(response.status_code,422,msg='invalid book payload stock status code mismatch')
 
 
 
+@pytest.mark.api
+@pytest.mark.parametrize("auth_token",["admin"],indirect=True)
+def test_create_book_rejects_duplicate_isbn(api_client,auth_token):
+    response = api_client.get('api/books/1')
+    response_json = response.json()
+    isbn = response_json['isbn']
+
+    create_resp = api_client.post('api/books',
+                                  headers={"Authorization":f"Bearer {auth_token}"},
+                                  json={
+                                "title":'test title',
+                                "author": 'test author',
+                                "isbn": "9780132350884",
+                                "price": 123,
+                                "stock": 23,
+                                "category": 'science'
+                                  })
+    check.equal(create_resp.status_code,409,msg="status code mismatch for duplicate isbn")
+
+
+
+@pytest.mark.api
+@pytest.mark.parametrize("auth_token",["admin"],indirect=True)
+def test_update_book_validates_payload_and_duplicate_isbn(api_client,auth_token):
+    response = api_client.get('api/books/2')
+    response_json = response.json()
+    isbn = response_json['isbn']
+
+    # duplicate patch
+    resp2 = api_client.patch('api/books/1',
+                             headers={"Authorization":f"Bearer {auth_token}"},
+                             json={
+                                 'isbn':isbn
+                             })
+    
+    check.equal(resp2.status_code,409,msg='status code mismatch duplicate isbn')
+    check.equal(f'ISBN {isbn} already exists',resp2.json()['message'],msg='message mismatch duplicate isbn')
+
+    # incomplete patch
+    resp3 = api_client.patch('api/books/1',
+                             headers={"Authorization":f"Bearer {auth_token}"},
+                             json={
+                                 'isbn':'12345678123'
+                             })
+    
+    check.equal(resp3.status_code,422,msg='incomplete isbn status code mismatch')
+    check.equal(resp3.json()['message'],'Invalid book payload',msg='incomplete isbn message mismatch')
+
+
+    
