@@ -3,6 +3,8 @@
 A small Flask app to practise **Playwright (Python)**, **API testing** and **CI/CD on GitHub Actions**.
 The `tests/` tree contains examples organized by API, UI, and end-to-end coverage. The app gives you something to test for every common concept, and every feature is reachable through both the **UI** and the **REST API**.
 
+New to browser automation? Start with the [Playwright with Python cheat sheet](playwright_cheatsheet.md).
+
 ## 1. Start
 
 ```bash
