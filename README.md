@@ -114,10 +114,10 @@ git push -u origin main
 `.github/workflows/ci.yml` runs:
 
 ```
-lint ─┬─► api  (pytest -m "not ui", parallel)
+lint ─┬─► api  (pytest -m "api", parallel)
       └─► ui   (pytest -m ui, matrix: chromium | firefox | webkit)
 ```
-Triggers: push to `main`, pull requests, a nightly schedule, and manual run (pick a browser). Reports, traces, screenshots and videos are uploaded as artifacts, even when tests fail. While `tests/` is empty the jobs still pass (pytest exit code 5, "no tests collected", is allowed; remove `|| [ $? -eq 5 ]` once you have tests).
+Triggers: push to `main`, pull requests, a nightly schedule, and manual run (pick a browser). Reports, traces, screenshots and videos are uploaded as artifacts, even when tests fail.
 
 Things to try: break a test and download the trace artifact, add retries (`pytest-rerunfailures`), add a coverage or Docker step, require status checks via branch protection, publish the HTML report with GitHub Pages.
 
