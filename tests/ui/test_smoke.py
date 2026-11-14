@@ -33,13 +33,13 @@ def test_root_redirect_and_unknown_route_renders_404(page:Page , base_url):
     expect(page.locator("body")).to_contain_text("404")
 
 @pytest.mark.ui 
-def test_books_csv_download_smoke(page:Page):
+def test_books_csv_download_smoke(page:Page, tmp_path: Path):
     page.goto("/playground")
     with page.expect_download() as download_info:
         page.get_by_test_id("download-csv").click()
 
     download = download_info.value
-    csv_path = Path(__file__).resolve().parents[2] / download.suggested_filename
+    csv_path = tmp_path / download.suggested_filename
     download.save_as(csv_path)
 
     with open(csv_path, newline="", encoding="utf-8-sig") as csv_file:
