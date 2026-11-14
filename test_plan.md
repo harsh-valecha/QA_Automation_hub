@@ -91,7 +91,7 @@ Do not duplicate API-only or UI-only checks in the E2E suite.
 
 | Test                                                            | Description                                                                              | Status         |
 | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | -------------- |
-| `test_login_logout_and_role_navigation`                         | Check admin/user navigation, role-specific delete controls, and logout.                  | ⬜ Not started |
+| `test_login_logout_and_role_navigation`                         | Check admin/user navigation, role-specific delete controls, and logout.                  | ✅ Complete    |
 | `test_failed_login_and_unsafe_next_redirect`                    | Check failed-login feedback and that unsafe `next` URLs cannot redirect off-site.        | ⬜ Not started |
 | `test_anonymous_access_to_protected_book_forms`                 | Check anonymous visits to create/edit pages redirect to login.                           | ⬜ Not started |
 | `test_books_search_filters_sort_and_pagination`                 | Check visible results, pagination, retained filters, reset, and invalid-filter feedback. | ⬜ Not started |
