@@ -20,6 +20,8 @@ concurrency:
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
 
 env:
   PYTHON_VERSION: "3.14"
@@ -122,7 +124,20 @@ jobs:
         run: npm install -g allure
       - name: Generate Allure report
         run: allure generate allure-results --clean --output allure-report
-      - uses: actions/upload-artifact@v6
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact for GitHub Pages
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: allure-report
           path: allure-report/
+
+  deploy-pages:
+    needs: build-allure-report
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
