@@ -1,0 +1,8 @@
+id,title,author,isbn,price,stock,category
+1,Clean Code,Robert C. Martin,9780132350884,39.99,12,tech
+2,Fluent Python,Luciano Ramalho,9781492056355,59.5,7,tech
+3,Cosmos,Carl Sagan,9780345539434,18.0,20,science
+4,Sapiens,Yuval Noah Harari,9780062316110,22.5,15,history
+5,The Hobbit,J.R.R. Tolkien,9780547928227,14.99,30,fiction
+6,Dune,Frank Herbert,9780441172719,9.99,0,fiction
+7,Pragmatic Programmer,Andrew Hunt,9780135957059,49.0,5,tech

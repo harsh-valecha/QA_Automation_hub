@@ -9,3 +9,5 @@ coverage.xml
 .pytest_cache/
 .ruff_cache/
 .DS_Store
+.code-review-graph
+.github/copilot-instructions.md

@@ -80,10 +80,10 @@ Do not duplicate API-only or UI-only checks in the E2E suite.
 
 | Test                                                | Description                                                                         | Status         |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------- |
-| `test_books_page_loads`                             | Open `/books` and check the page title is Books.                                    | 🟡 Partial     |
-| `test_core_pages_render_smoke`                      | Check login, playground, and playground-frame pages render without uncaught errors. | ⬜ Not started |
-| `test_root_redirects_and_unknown_route_renders_404` | Check the root redirect and unknown-route 404 page.                                 | ⬜ Not started |
-| `test_books_csv_download_smoke`                     | Check CSV download filename, content type, header columns, and seven data rows.     | ⬜ Not started |
+| `test_books_page_loads`                             | Open `/books` and check the page title is Books.                                    | ✅ Complete    |
+| `test_core_pages_render_smoke`                      | Check login, playground, and playground-frame pages render without uncaught errors. | ✅ Complete    |
+| `test_root_redirects_and_unknown_route_renders_404` | Check the root redirect and unknown-route 404 page.                                 | ✅ Complete    |
+| `test_books_csv_download_smoke`                     | Check CSV download filename, content type, header columns, and seven data rows.     | ✅ Complete    |
 | `test_health_failure_keeps_books_page_usable`       | Fail the health request and check the page remains usable with a down badge.        | ⬜ Not started |
 | `test_stats_failure_shows_unavailable_state`        | Fail the stats request and check the page remains usable with unavailable stats.    | ⬜ Not started |
 

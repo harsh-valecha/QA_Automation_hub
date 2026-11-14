@@ -482,12 +482,44 @@ Run one test at a time, show the browser, or slow down actions:
 
 ```bash
 pytest tests/ui/test_smoke.py -q
-pytest -m ui --headed
 pytest -m ui --headed --slowmo 400
 PWDEBUG=1 pytest -k books
 ```
 
-The project config keeps traces and screenshots on failure. Open a trace with:
+- `--headed` opens a visible browser; `--slowmo 400` adds a 400 ms delay between
+  actions.
+- `PWDEBUG=1` opens the Playwright Inspector for interactive debugging.
+- This project currently has `--headed` in `pytest.ini`'s `addopts`, so **all pytest
+  runs default to headed mode**, including CI. For headless CI, remove that default
+  and pass `--headed` only when you want to watch a local run.
+
+To make headed mode a local default without putting it in a shared project file:
+
+- Remove `--headed` from `pytest.ini` and from workspace-level
+  [`.vscode/settings.json`](.vscode/settings.json) if it is set there. Both files
+  can be committed, and the workspace setting only affects runs started by VS Code.
+- For terminal runs, set `PYTEST_ADDOPTS=--headed` in your local shell profile.
+- For VS Code's Testing panel, add `"python.testing.pytestArgs": ["tests", "--headed"]`
+  in **User Settings**, not Workspace Settings. Keep `"tests"` so test discovery
+  still uses the project's test directory. Workspace settings override user settings.
+
+You can also opt into headed mode through `tests/conftest.py`. After removing the
+global `--headed` option, override pytest-playwright's `browser_type_launch_args`
+fixture and set `headless=False` only when an environment variable such as
+`PW_HEADED=1` is set. Preserve the fixture's existing arguments so options such as
+`--slowmo` continue to work. This keeps local runs opt-in and CI headless by default.
+
+Headed mode in Linux CI needs a display. `xvfb-run -a pytest --headed` can provide a
+virtual display when Xvfb is installed, but it does not show the browser on your own
+screen. To inspect a headless CI run, keep its artifacts instead:
+
+```bash
+pytest --video retain-on-failure
+```
+
+This project already keeps traces and screenshots on failure. Upload the resulting
+`test-results/` directory as a CI artifact to inspect them after the run. Open a trace
+with:
 
 ```bash
 playwright show-trace test-results/<test-folder>/trace.zip

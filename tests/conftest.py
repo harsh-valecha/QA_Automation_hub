@@ -30,6 +30,15 @@ def _free_port() -> int:
 
 @pytest.fixture(scope="session")
 def live_server():
+    """Start the app for the test session, or use the URL in ``BASE_URL``.
+
+    Args:
+        None.
+
+    Yields:
+        str: Healthy application base URL without a trailing slash. A locally
+        started server is stopped after the session.
+    """
     external = os.getenv("BASE_URL")
     if external:
         yield external.rstrip("/")
@@ -64,11 +73,27 @@ def live_server():
 
 @pytest.fixture(scope="session")
 def base_url(live_server):
+    """Expose the application URL for browser and API tests.
+
+    Args:
+        live_server (str): Base URL provided by the ``live_server`` fixture.
+
+    Returns:
+        str: Application base URL without a trailing slash.
+    """
     return live_server
 
 
 @pytest.fixture(autouse=True)
 def _reset_state(live_server):
+    """Reset application test data before every test.
+
+    Args:
+        live_server (str): Base URL of the running application.
+
+    Returns:
+        None: Raises an HTTP error if the reset request fails.
+    """
     requests.post(f"{live_server}/api/test/reset", timeout=5).raise_for_status()
 
 
@@ -76,7 +101,14 @@ def _reset_state(live_server):
 def api_client(base_url):
     """Provide a requests-based client to tests using relative API paths.
 
-    Example::
+    Args:
+        base_url (str): Base URL of the running application.
+
+    Returns:
+        APIClient: A requests session that resolves relative paths against
+        ``base_url`` and passes absolute URLs through unchanged.
+
+    Example:
 
         def test_health(api_client):
             response = api_client.get("/api/health")
@@ -96,7 +128,19 @@ def api_client(base_url):
 
 @pytest.fixture
 def auth_token(request, api_client):
-    """Return an admin or user token.
+    """Log in and return an admin or user authentication token.
+
+    Args:
+        request: Pytest request; its indirect parameter may be ``"admin"`` or
+            ``"user"``. Defaults to ``"user"``.
+        api_client (APIClient): Client used to submit the login request.
+
+    Returns:
+        str: Authentication token for the selected role.
+
+    Raises:
+        ValueError: If the requested role is neither ``"admin"`` nor ``"user"``.
+        requests.HTTPError: If the login request fails.
 
     Choose a role with indirect parametrization, e.g.:
         @pytest.mark.parametrize("auth_token", ["admin"], indirect=True)
@@ -118,17 +162,43 @@ def auth_token(request, api_client):
 
 @pytest.fixture
 def username():
+    """Provide the default test user's username.
+
+    Args:
+        None.
+
+    Returns:
+        str: The default username, ``"user"``.
+    """
     return "user"
 
 
 @pytest.fixture
 def password():
+    """Provide the default test user's password.
+
+    Args:
+        None.
+
+    Returns:
+        str: The default password, ``"user123"``.
+    """
     return "user123"
 
 
 @pytest.fixture
 def logged_in_page(page, username, password, base_url):
-    """Return a browser page signed in with the supplied credentials."""
+    """Sign in through the browser and return the page used for login.
+
+    Args:
+        page: Playwright page used for navigation and form submission.
+        username (str): Username to submit.
+        password (str): Password to submit.
+        base_url (str): Base URL of the running application.
+
+    Returns:
+        Page: The same Playwright page after submitting the login form.
+    """
     page.goto(f"{base_url}/login")
     page.locator('input[name="username"]').fill(username)
     page.locator('input[name="password"]').fill(password)
@@ -138,9 +208,17 @@ def logged_in_page(page, username, password, base_url):
 
 @pytest.fixture
 def book_factory():
-    """Return valid book payloads with unique ISBN-13 values by default.
+    """Provide a factory for book payloads with unique ISBN-13 values by default.
 
-    Example test usage::
+    Args:
+        None.
+
+    Returns:
+        Callable: A function accepting an optional ``isbn`` string and
+        returning a dictionary with ``title``, ``author``, ``isbn``, and
+        ``category`` keys. Generated ISBN values are unique within the test.
+
+    Example test usage:
 
         def test_book_payload(book_factory):
             book = book_factory()
