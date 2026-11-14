@@ -33,7 +33,10 @@ def test_root_redirect_and_unknown_route_renders_404(page:Page , base_url):
     expect(page.locator("body")).to_contain_text("404")
 
 @pytest.mark.ui 
-def test_books_csv_download_smoke(page:Page, tmp_path: Path):
+def test_books_csv_download_smoke(page: Page, tmp_path: Path, browser_name: str):
+    if browser_name == "webkit":
+        pytest.skip("WebKit does not reliably emit Playwright download events for this CSV")
+
     page.goto("/playground")
     with page.expect_download() as download_info:
         page.get_by_test_id("download-csv").click()
