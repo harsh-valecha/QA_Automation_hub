@@ -123,29 +123,3 @@ jobs:
         with:
           name: allure-report
           path: allure-report/
-      - name: Upload Pages artifact
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: allure-report/
-
-  publish-allure-report:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: build-allure-report
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/configure-pages@v5
-      - name: Deploy Allure report to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-      - name: Add report link to run summary
-        run: |
-          echo "## Allure report" >> "$GITHUB_STEP_SUMMARY"
-          echo "[Open the latest report](${{ steps.deployment.outputs.page_url }})" >> "$GITHUB_STEP_SUMMARY"
