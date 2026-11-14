@@ -98,7 +98,10 @@ pytest -k login
 PWDEBUG=1 pytest -k login               # Playwright Inspector
 playwright show-trace test-results/<folder>/trace.zip
 ```
-Reports are written to `reports/report.html` and `reports/junit.xml`.
+Reports are written to `reports/report.html` and `reports/junit.xml`. Allure test
+results are written to `allure-results/`; after installing the Allure CLI, generate
+a local report with `allure generate allure-results --clean --output allure-report`
+and open `allure-report/index.html`.
 
 Ideas for fixtures to write yourself: an API client with a token, a logged-in `page` from saved cookies, a Page Object per screen, a data factory with unique ISBNs (13 digits).
 
@@ -117,9 +120,20 @@ git push -u origin main
 lint ─┬─► api  (pytest -m "api", parallel)
       └─► ui   (pytest -m ui, matrix: chromium | firefox | webkit)
 ```
-Triggers: push to `main`, pull requests, a nightly schedule, and manual run (pick a browser). Reports, traces, screenshots and videos are uploaded as artifacts, even when tests fail.
+Triggers: push to `main`, pull requests, and manual run (pick a browser). Reports, traces, screenshots and videos are uploaded as artifacts, even when tests fail.
 
-Things to try: break a test and download the trace artifact, add retries (`pytest-rerunfailures`), add a coverage or Docker step, require status checks via branch protection, publish the HTML report with GitHub Pages.
+The workflow combines Allure results from the API job and each browser job into a
+single report. Pull requests and other branches expose that report as an Actions
+artifact; pushes to `main` publish it to
+[GitHub Pages](https://harsh-valecha.github.io/QA_Automation_hub/).
+
+To enable Pages in the repository, open **Settings → Pages** and set **Build and
+deployment → Source** to **GitHub Actions**. The workflow already declares the
+`pages: write` and `id-token: write` permissions required to deploy. After pushing
+these changes to `main`, open **Actions**, wait for the CI run to finish, then visit
+the Pages URL above. No manually created token or secret is needed.
+
+Things to try: break a test and download the trace artifact, add retries (`pytest-rerunfailures`), add a coverage or Docker step, require status checks via branch protection.
 
 ## 6. Layout
 

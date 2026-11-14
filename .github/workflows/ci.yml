@@ -52,12 +52,18 @@ jobs:
         run: python -m pip install -r requirements-dev.txt
       - name: Install playwright dependencies
         run: playwright install
-      - run: pytest -m "api" -n auto 
-      - uses: actions/upload-artifact@v4
+      - run: pytest -m "api" -n auto
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: api-reports
           path: reports/
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: api-allure-results
+          path: allure-results/
+          if-no-files-found: warn
 
   ui:
     needs: lint
@@ -80,10 +86,62 @@ jobs:
         run: >
           pytest -m ui --browser ${{ matrix.browser }} --video retain-on-failure -n 2
           --html=reports/ui-${{ matrix.browser }}.html
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: ui-reports-${{ matrix.browser }}
           path: |
             reports/
             test-results/
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: ui-allure-results-${{ matrix.browser }}
+          path: allure-results/
+          if-no-files-found: warn
+
+  build-allure-report:
+    if: always()
+    needs: [api, ui]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Download Allure results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "*-allure-results"
+          path: allure-results
+          merge-multiple: true
+      - name: Install Allure CLI
+        run: npm install --global allure-commandline@2.34.1
+      - name: Generate Allure report
+        run: allure generate allure-results --clean --output allure-report
+      - uses: actions/upload-artifact@v6
+        with:
+          name: allure-report
+          path: allure-report/
+      - name: Upload Pages artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: allure-report/
+
+  publish-allure-report:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build-allure-report
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - name: Deploy Allure report to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

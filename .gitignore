@@ -3,6 +3,8 @@ __pycache__/
 .venv/
 venv/
 reports/
+allure-results/
+allure-report/
 test-results/
 .coverage
 coverage.xml
