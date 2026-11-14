@@ -116,7 +116,7 @@ jobs:
           path: allure-results
           merge-multiple: true
       - name: Install Allure CLI
-        run: npm install --global allure-commandline@2.34.1
+        run: npm install -g allure
       - name: Generate Allure report
         run: allure generate allure-results --clean --output allure-report
       - uses: actions/upload-artifact@v6
@@ -145,3 +145,7 @@ jobs:
       - name: Deploy Allure report to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Add report link to run summary
+        run: |
+          echo "## Allure report" >> "$GITHUB_STEP_SUMMARY"
+          echo "[Open the latest report](${{ steps.deployment.outputs.page_url }})" >> "$GITHUB_STEP_SUMMARY"
