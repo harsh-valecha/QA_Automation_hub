@@ -112,11 +112,11 @@ jobs:
       - name: Download Allure results
         uses: actions/download-artifact@v4
         with:
-          pattern: "*-allure-results"
+          pattern: "*-allure-results*"
           path: allure-results
           merge-multiple: true
       - name: Install Allure CLI
-        run: npm install -g allure
+        run: npm install -g allure-commandline
       - name: Generate Allure report
         run: allure generate allure-results --clean --output allure-report
       - uses: actions/upload-artifact@v6
