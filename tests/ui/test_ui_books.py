@@ -27,5 +27,6 @@ def test_login_logout_and_role_navigation(page:Page):
     rows = page.locator(".actions").all_inner_texts()
     for i in rows:
         check.equal(i,"Edit\nDelete",msg="action mismatch for admin")
+
     
     
