@@ -92,9 +92,9 @@ Do not duplicate API-only or UI-only checks in the E2E suite.
 | Test                                                            | Description                                                                              | Status         |
 | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | -------------- |
 | `test_login_logout_and_role_navigation`                         | Check admin/user navigation, role-specific delete controls, and logout.                  | ✅ Complete    |
-| `test_failed_login_and_unsafe_next_redirect`                    | Check failed-login feedback and that unsafe `next` URLs cannot redirect off-site.        | ⬜ Not started |
-| `test_anonymous_access_to_protected_book_forms`                 | Check anonymous visits to create/edit pages redirect to login.                           | ⬜ Not started |
-| `test_books_search_filters_sort_and_pagination`                 | Check visible results, pagination, retained filters, reset, and invalid-filter feedback. | ⬜ Not started |
+| `test_failed_login_and_unsafe_next_redirect`                    | Check failed-login feedback and that unsafe `next` URLs cannot redirect off-site.        | ✅ Complete    |
+| `test_anonymous_access_to_protected_book_forms`                 | Check anonymous visits to create/edit pages redirect to login.                           | ✅ Complete    |
+| `test_books_search_filters_sort_and_pagination`                 | Check visible results, pagination, retained filters, reset, and invalid-filter feedback. | 🟡 Partial     |
 | `test_create_book_form_success_and_validation`                  | Check successful creation plus validation errors and retained form values.               | ⬜ Not started |
 | `test_edit_book_form_prefills_saves_and_rejects_invalid_values` | Check edit form values, successful edits, validation, and retained input.                | ⬜ Not started |
 | `test_book_detail_and_delete_confirmation`                      | Check book details, delete confirmation, and user delete restrictions.                   | ⬜ Not started |

@@ -9,6 +9,9 @@ class BasePage:
         self.playground_btn = page.get_by_test_id('nav-playground')
         self.login_btn = page.get_by_test_id('nav-login')
         self.home_btn = page.get_by_test_id('nav-home')
+        self.current_user_txt = page.get_by_test_id('current-user')
+        self.logout_btn = page.get_by_test_id('logout-button')
+        self.add_book_btn = page.get_by_test_id('nav-add-book')
 
     def navigate(self):
         self.page.goto(self.URL)
