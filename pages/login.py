@@ -44,7 +44,7 @@ class LoginPage(BasePage):
         user_username = self._get_env('USER_USERNAME', 'user_username')
         user_password = self._get_env('USER_PASSWORD', 'user_password')
         self.login(username=user_username, password=user_password)
-
+    
     @staticmethod
     def _get_env(*names: str) -> str:
         for name in names:
