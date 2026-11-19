@@ -36,14 +36,24 @@ class LoginPage(BasePage):
         self.login_btn.click()
 
     def admin_login(self):
-        admin_username = os.getenv('admin_username')
-        admin_password = os.getenv('admin_password')
-        self.login(username=admin_username,password=admin_password)
+        admin_username = self._get_env('ADMIN_USERNAME', 'admin_username')
+        admin_password = self._get_env('ADMIN_PASSWORD', 'admin_password')
+        self.login(username=admin_username, password=admin_password)
 
     def user_login(self):
-            user_username = os.getenv('user_username')
-            user_password = os.getenv('user_password')
-            self.login(username=user_username,password=user_password)
+        user_username = self._get_env('USER_USERNAME', 'user_username')
+        user_password = self._get_env('USER_PASSWORD', 'user_password')
+        self.login(username=user_username, password=user_password)
+
+    @staticmethod
+    def _get_env(*names: str) -> str:
+        for name in names:
+            value = os.getenv(name)
+            if value:
+                return value
+        raise RuntimeError(
+            f"Missing login credential environment variable: {names[0]}"
+        )
 
 
         
