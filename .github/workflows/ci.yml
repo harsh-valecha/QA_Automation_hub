@@ -70,10 +70,10 @@ jobs:
     needs: lint
     runs-on: ubuntu-latest
     env:
-      ADMIN_USERNAME: ${{ vars.ADMIN_USERNAME }}
-      ADMIN_PASSWORD: ${{ vars.ADMIN_PASSWORD }}
-      USER_USERNAME: ${{ vars.USER_USERNAME }}
-      USER_PASSWORD: ${{ vars.USER_PASSWORD }}
+      ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+      USER_USERNAME: ${{ secrets.USER_USERNAME }}
+      USER_PASSWORD: ${{ secrets.USER_PASSWORD }}
     strategy:
       fail-fast: false
       matrix:
