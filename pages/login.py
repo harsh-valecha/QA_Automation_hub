@@ -1,4 +1,8 @@
+import os
 from playwright.sync_api import Page
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class BasePage:
     URL = ""
@@ -30,6 +34,16 @@ class LoginPage(BasePage):
         self.username_input.fill(username)
         self.password_input.fill(password)
         self.login_btn.click()
+
+    def admin_login(self):
+        admin_username = os.getenv('admin_username')
+        admin_password = os.getenv('admin_password')
+        self.login(username=admin_username,password=admin_password)
+
+    def user_login(self):
+            user_username = os.getenv('user_username')
+            user_password = os.getenv('user_password')
+            self.login(username=user_username,password=user_password)
 
 
         

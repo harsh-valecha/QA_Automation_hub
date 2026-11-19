@@ -2,7 +2,7 @@ import pytest
 from pytest_check import check
 from playwright.sync_api import Page , expect
 from pages.login import LoginPage
-from pages.books import BooksPage
+from pages.books import BooksPage , AddPage
 
 @pytest.mark.ui 
 def test_login_logout_and_role_navigation(page:Page):
@@ -39,7 +39,7 @@ def test_failed_login_and_unsafe_next_redirect(page:Page):
     check.equal(l1.error_alert.text_content(),"Invalid username or password",msg="failed login msg error invalidated")
 
     # after successful login the page is redirected to applications valid url
-    l1.login('user','user123')
+    l1.user_login()
     assert page.url.endswith('/books')==True , "valid login does not redirect to correct page"
 
 
@@ -81,3 +81,39 @@ def test_books_search_filters_sort_and_pagination(page:Page):
         prices_filtered.append(float(book['price'][1:]))
     sorted_prices = sorted(prices_filtered)
     check.equal(prices_filtered,sorted_prices,msg='sorting not performed correctly')
+
+    # pagination
+    books=[]
+    while True:
+        books.extend(b1.get_books())
+        if page.get_by_test_id('page-next-disabled').count()>0:
+            break
+        b1.book_nxt_btn.click()
+    check.equal(len(books),7,msg='pagination not worked properly')
+
+    # invalid filter feedback
+    b1.reset_filter()
+    b1.filter(filter='test',apply=True)
+    msg = b1.no_books_txt.text_content()
+    print(msg)
+    check.equal(a=msg,b='No books found.',msg='invalid filter message check failed')
+
+
+@pytest.mark.ui 
+def test_create_book_form_success_and_validation(page:Page):
+    l1 = LoginPage(page)
+    l1.navigate()
+    l1.user_login()
+    l1.add_book_btn.click()
+
+    a1 = AddPage(page)
+    a1.navigate()
+    book_title = 'Test book'
+    a1.submit(title=book_title,
+              author='test author',
+              isbn=1234567891234,
+              price=12.33,
+              stock=12,
+              category='history')
+    msg_content = a1.flash_msg.text_content()
+    check.equal(msg_content,f"Book '{book_title}' created.",msg='book creation failed')

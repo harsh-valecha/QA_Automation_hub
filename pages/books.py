@@ -23,7 +23,9 @@ class BooksPage(BasePage):
         self.book_category_txt = page.get_by_test_id('book-category')
         self.book_edit_btn = page.get_by_test_id('edit-book')
         self.book_delete_btn = page.get_by_test_id('delete-book')
-        
+        self.book_nxt_btn = page.get_by_test_id('page-next')
+        self.book_prev_btn = page.get_by_test_id('page-prev')
+        self.no_books_txt = page.get_by_test_id('empty-state')
 
     def filter(
         self,
@@ -99,3 +101,33 @@ class EditPage(BasePage):
         if cancel:
             self.cancel_btn.click()
         
+class AddPage(BasePage):
+    URL = 'books/new'
+
+    def __init__(self, page):
+        super().__init__(page)
+        self.title_input = page.get_by_test_id('input-title')
+        self.author_input = page.get_by_test_id('input-author')
+        self.isbn_input = page.get_by_test_id('input-isbn')
+        self.price_input = page.get_by_test_id('input-price')
+        self.stock_input = page.get_by_test_id('input-stock')
+        self.category_dropdown = page.get_by_test_id('input-category')
+        self.submit_btn = page.get_by_test_id('submit-book')
+        self.cancel_btn = page.get_by_test_id('cancel-link')
+        self.flash_msg = page.get_by_test_id('flash')
+
+
+    def submit(self,
+               title:str,
+               author:str,
+               isbn:int,
+               price:float,
+               stock:int,
+               category:Literal['fiction','tech','science','history']):
+        self.title_input.fill(title)
+        self.author_input.fill(author)
+        self.isbn_input.fill(str(isbn))
+        self.price_input.fill(str(price))
+        self.stock_input.fill(str(stock))
+        self.category_dropdown.select_option(category)
+        self.submit_btn.click()

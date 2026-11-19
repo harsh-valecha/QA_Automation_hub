@@ -13,3 +13,4 @@ coverage.xml
 .DS_Store
 .code-review-graph
 .github/copilot-instructions.md
+.env
